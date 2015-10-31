@@ -5,16 +5,14 @@ const Bundlerify = require('../src/index');
 const BrowserifyMock = require(BrowserifyMockPath);
 const gulp = require('gulp');
 
-let instance = null;
-
 describe('gulp-bundlerify', () => {
 
     afterEach(() => {
-        instance = null;
+        const instance = null;
     });
 
     it('should create a new instance and have public methods', () => {
-        instance = new Bundlerify(gulp);
+        const instance = new Bundlerify(gulp);
         expect(instance).toEqual(jasmine.any(Bundlerify));
         expect(instance.clean).toEqual(jasmine.any(Function));
         expect(instance.build).toEqual(jasmine.any(Function));
@@ -23,7 +21,7 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should write the configuration correctly', () => {
-        let dummyConfig = {
+        const dummyConfig = {
             mainFile: './test.js',
             dist: {
                 file: 'app.js',
@@ -45,8 +43,8 @@ describe('gulp-bundlerify', () => {
             },
         };
 
-        instance = new Bundlerify(gulp, dummyConfig);
-        let config = instance.config;
+        const instance = new Bundlerify(gulp, dummyConfig);
+        const config = instance.config;
         expect(config.mainFile).toEqual(dummyConfig.mainFile);
         expect(config.dist.file).toEqual(dummyConfig.dist.file);
         expect(config.dist.dir).toEqual('./dist/');
@@ -61,18 +59,18 @@ describe('gulp-bundlerify', () => {
                 '/dist/': './dist/',
             }
         ));
-        let presetsValue = ['es2015'].concat(dummyConfig.babelifyOptions.presets);
+        const presetsValue = ['es2015'].concat(dummyConfig.babelifyOptions.presets);
         expect(config.babelifyOptions.presets).toEqual(presetsValue);
     });
 
     it('should expand shorthand settings', () => {
-        let dummyConfig = {
+        const dummyConfig = {
             watchifyDebug: true,
             browserSyncBaseDir: './rosario/',
             browserSyncEnabled: false,
         };
 
-        instance = new Bundlerify(gulp, dummyConfig);
+        const instance = new Bundlerify(gulp, dummyConfig);
         expect(instance.config.watchifyOptions.debug).toBeTruthy();
         expect(instance.config.browserSyncOptions.server.baseDir).toEqual(
             dummyConfig.browserSyncBaseDir
@@ -81,14 +79,14 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should be able to be instantiated just with a filepath', () => {
-        let dummyFile = './Rosario.js';
-        instance = new Bundlerify(gulp, dummyFile);
+        const dummyFile = './Rosario.js';
+        const instance = new Bundlerify(gulp, dummyFile);
         expect(instance.config.mainFile).toEqual(dummyFile);
     });
 
     it('should create a Browser Sync router for the dist directory', () => {
-        let dummyPath = '/charito/';
-        instance = new Bundlerify(gulp, {
+        const dummyPath = '/charito/';
+        const instance = new Bundlerify(gulp, {
             dist: {
                 dir: dummyPath,
             },
@@ -97,7 +95,7 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should be able to overwrite and obtain the dependencies modules', () => {
-        let dummyValues = {
+        const dummyValues = {
             watchify: {
                 name: 'My Custom Watchify',
                 module: 'watchify',
@@ -140,7 +138,7 @@ describe('gulp-bundlerify', () => {
             },
         };
 
-        instance = new Bundlerify(gulp, require('object-assign-deep'));
+        const instance = new Bundlerify(gulp, require('object-assign-deep'));
 
         instance.watchify = dummyValues.watchify.name;
         expect(instance.watchify).toEqual(dummyValues.watchify.name);
@@ -197,10 +195,10 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should register the basic tasks', () => {
-        let mockGulp = jest.genMockFromModule('gulp');
-        let mockFunc = jest.genMockFunction();
-        let mockRimRaf = jest.genMockFromModule('rimraf');
-        instance = new Bundlerify(mockGulp, {
+        const mockGulp = jest.genMockFromModule('gulp');
+        const mockFunc = jest.genMockFunction();
+        const mockRimRaf = jest.genMockFromModule('rimraf');
+        const instance = new Bundlerify(mockGulp, {
             tasks: {
                 docs: false,
                 lint: {
@@ -227,10 +225,10 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should overwrite the basic tasks settings', () => {
-        let mockGulp = jest.genMockFromModule('gulp');
-        let mockBuildFunc = jest.genMockFunction();
-        let mockRimRaf = jest.genMockFromModule('rimraf');
-        instance = new Bundlerify(mockGulp, {
+        const mockGulp = jest.genMockFromModule('gulp');
+        const mockBuildFunc = jest.genMockFunction();
+        const mockRimRaf = jest.genMockFromModule('rimraf');
+        const instance = new Bundlerify(mockGulp, {
             tasks: {
                 build: {
                     deps: ['dep1', 'dep2'],
@@ -258,8 +256,8 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should run the clean task', () => {
-        let mockRimRaf = jest.genMockFromModule('rimraf');
-        instance = new Bundlerify(gulp);
+        const mockRimRaf = jest.genMockFromModule('rimraf');
+        const instance = new Bundlerify(gulp);
         instance.rimraf = mockRimRaf;
         instance.clean(() => {});
         expect(mockRimRaf.mock.calls.length).toEqual(1);
@@ -268,18 +266,18 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should run the build task', () => {
-        let mockBrowserify = new BrowserifyMock();
-        let mockGulp = jest.genMockFromModule('gulp');
-        let mockBabelify = jest.genMockFromModule('babelify');
-        let mockSource = jest.genMockFromModule('vinyl-source-stream');
-        let mockGulpIf = jest.genMockFromModule('gulp-if');
-        let mockBrowserSync = jest.genMockFromModule('browser-sync');
-        let mockUglify = jest.genMockFromModule('gulp-uglify');
-        let mockStreamify = jest.genMockFromModule('gulp-streamify');
-        let mockGulpUtil = jest.genMockFromModule('gulp-util');
-        let mockPolyfill = jest.genMockFunction();
+        const mockBrowserify = new BrowserifyMock();
+        const mockGulp = jest.genMockFromModule('gulp');
+        const mockBabelify = jest.genMockFromModule('babelify');
+        const mockSource = jest.genMockFromModule('vinyl-source-stream');
+        const mockGulpIf = jest.genMockFromModule('gulp-if');
+        const mockBrowserSync = jest.genMockFromModule('browser-sync');
+        const mockUglify = jest.genMockFromModule('gulp-uglify');
+        const mockStreamify = jest.genMockFromModule('gulp-streamify');
+        const mockGulpUtil = jest.genMockFromModule('gulp-util');
+        const mockPolyfill = jest.genMockFunction();
 
-        instance = new Bundlerify(mockGulp, {
+        const instance = new Bundlerify(mockGulp, {
             polyfillsEnabled: true,
             polyfills: [mockPolyfill],
         });
@@ -340,16 +338,16 @@ describe('gulp-bundlerify', () => {
     });
 
     it('should run the serve task', () => {
-        let mockBrowserify = new BrowserifyMock();
-        let mockGulp = jest.genMockFromModule('gulp');
-        let mockBabelify = jest.genMockFromModule('babelify');
-        let mockSource = jest.genMockFromModule('vinyl-source-stream');
-        let mockGulpIf = jest.genMockFromModule('gulp-if');
-        let mockBrowserSync = jest.genMockFromModule('browser-sync');
-        let mockUglify = jest.genMockFromModule('gulp-uglify');
-        let mockStreamify = jest.genMockFromModule('gulp-streamify');
+        const mockBrowserify = new BrowserifyMock();
+        const mockGulp = jest.genMockFromModule('gulp');
+        const mockBabelify = jest.genMockFromModule('babelify');
+        const mockSource = jest.genMockFromModule('vinyl-source-stream');
+        const mockGulpIf = jest.genMockFromModule('gulp-if');
+        const mockBrowserSync = jest.genMockFromModule('browser-sync');
+        const mockUglify = jest.genMockFromModule('gulp-uglify');
+        const mockStreamify = jest.genMockFromModule('gulp-streamify');
 
-        instance = new Bundlerify(mockGulp);
+        const instance = new Bundlerify(mockGulp);
         instance.browserify = mockBrowserify.browserify.bind(mockBrowserify);
         instance.babelify = mockBabelify;
         instance.vinylSourceStream = mockSource;
@@ -401,5 +399,4 @@ describe('gulp-bundlerify', () => {
         expect(mockBrowserSync.reload.mock.calls.length).toEqual(1);
         expect(mockBrowserSync.reload.mock.calls[0][0]).toEqual(jasmine.any(Object));
     });
-
 });

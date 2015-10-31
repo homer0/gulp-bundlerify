@@ -139,7 +139,7 @@ class Bundlerify {
             browserSyncEnabled: 'browserSyncOptions/enabled',
         };
         Object.keys(shortSettings).forEach((setting) => {
-            let shortValue = config[setting];
+            const shortValue = config[setting];
             if (typeof shortValue !== 'undefined') {
                 this._setValueAtObjectPath(config, shortSettings[setting], shortValue);
                 delete config[setting];
@@ -177,10 +177,10 @@ class Bundlerify {
     }
 
     _getEntryFileSettings() {
-        let result = [];
+        const result = [];
         if (this.config.polyfillsEnabled) {
             for (let i = 0; i < this.config.polyfills.length; i++) {
-                let polyfill = this.config.polyfills[i];
+                const polyfill = this.config.polyfills[i];
                 if (typeof polyfill === 'string') {
                     result.push(require.resolve(polyfill));
                 } else {

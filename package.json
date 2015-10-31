@@ -19,12 +19,15 @@
     "object-assign-deep": "0.0.4",
     "jest-cli": "0.5.10",
     "babel-jest": "5.3.0",
-    "gulp": "3.9.0"
+    "gulp": "3.9.0",
+    "babel-eslint": "4.1.1",
+    "eslint": "1.7.1"
   },
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src/",
     "prepublish": "npm run build",
-    "test": "jest ./tests/index-test.js"
+    "test": "jest ./tests/index-test.js",
+    "lint": "eslint ./src/ ./tests/"
   },
   "jest": {
     "collectCoverage": true,
