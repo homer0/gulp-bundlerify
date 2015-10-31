@@ -149,8 +149,9 @@ describe('gulp-bundlerify', () => {
         expect(instance.browserify).toEqual(dummyValues.browserify.name);
         instance.browserify = null;
         // For some reason, the reporter doesn't close the process when you require the
-        // 'browserify' module.
-        instance._dependencies['browserify'] = dummyValues.browserify.name;
+        // 'browserify' module, so this will inject it on the dependencies directory
+        // so it doesn't have to require it.
+        instance._dependencies.browserify = dummyValues.browserify.name;
         expect(instance.browserify).toEqual(dummyValues.browserify.name);
 
         instance.babelify = dummyValues.babelify.name;
@@ -204,8 +205,8 @@ describe('gulp-bundlerify', () => {
                 lint: {
                     deps: ['dep1', 'dep2'],
                     method: () => {},
-                }
-            }
+                },
+            },
         });
 
         instance.rimraf = mockRimRaf;
@@ -219,6 +220,7 @@ describe('gulp-bundlerify', () => {
         expect(tasksCalls.length).toEqual(tasksNames.length - 1);
         const cleanTask = mockGulp.task.mock.calls[2];
         cleanTask[2](() => {});
+
         expect(mockRimRaf.mock.calls.length).toEqual(1);
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
@@ -237,7 +239,7 @@ describe('gulp-bundlerify', () => {
                 clean: {
                     name: 'removeEverything',
                 },
-            }
+            },
         });
         instance.rimraf = mockRimRaf;
         expect(instance.tasks()).toEqual(instance);
@@ -245,11 +247,13 @@ describe('gulp-bundlerify', () => {
         expect(mockGulp.task.mock.calls.length).toEqual(tasksLength);
         const buildTask = mockGulp.task.mock.calls[0];
         buildTask[2](() => {});
+
         expect(mockBuildFunc.mock.calls.length).toEqual(1);
         expect(mockBuildFunc.mock.calls[0][0]).toEqual(jasmine.any(Function));
         expect(mockBuildFunc.mock.calls[0][1]).toEqual(jasmine.any(Function));
         const cleanTask = mockGulp.task.mock.calls[2];
         cleanTask[2](() => {});
+
         expect(mockRimRaf.mock.calls.length).toEqual(1);
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
@@ -260,6 +264,7 @@ describe('gulp-bundlerify', () => {
         const instance = new Bundlerify(gulp);
         instance.rimraf = mockRimRaf;
         instance.clean(() => {});
+
         expect(mockRimRaf.mock.calls.length).toEqual(1);
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
@@ -366,7 +371,7 @@ describe('gulp-bundlerify', () => {
         expect(browserifyCall[0]).toEqual([instance.config.mainFile]);
         expect(browserifyCall[1]).toEqual({
             debug: true,
-            fullPaths: true
+            fullPaths: true,
         });
 
         expect(mockBrowserify.watchifyMock.mock.calls.length).toEqual(1);

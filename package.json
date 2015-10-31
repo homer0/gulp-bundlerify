@@ -21,13 +21,14 @@
     "babel-jest": "5.3.0",
     "gulp": "3.9.0",
     "babel-eslint": "4.1.1",
-    "eslint": "1.7.1"
+    "eslint": "1.7.1",
+    "jscs": "2.5.0"
   },
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src/",
     "prepublish": "npm run build",
     "test": "jest ./tests/index-test.js",
-    "lint": "eslint ./src/ ./tests/"
+    "lint": "eslint ./src/ ./tests/; jscs ./src/ ./tests/"
   },
   "jest": {
     "collectCoverage": true,
