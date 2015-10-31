@@ -3,15 +3,14 @@ class Bundlerify {
 
     constructor(gulp, config = {}, assigner = null) {
         this.gulp = gulp;
+        assigner = assigner || require('object-assign-deep');
         if (typeof config === 'string') {
             config = {
                 mainFile: config,
             };
         } else {
-            config = this._expandShorthandSettings(config);
+            config = this._expandShorthandSettings(assigner({}, config));
         }
-
-        assigner = assigner || require('object-assign-deep');
 
         this.config = assigner({
             mainFile: './index.js',
@@ -172,7 +171,7 @@ class Bundlerify {
         .bundle()
         .on('error', this._logError.bind(this))
         .pipe(this.vinylSourceStream(this.config.dist.file))
-        .pipe(this.gulpIf(this.uglify, this.gulpStreamify(this.uglifier())))
+        .pipe(this.gulpIf(this.config.uglify, this.gulpStreamify(this.uglifier())))
         .pipe(this.gulp.dest(this.config.dist.dir))
         .pipe(this.browserSync.reload({ stream: true }));
     }
@@ -209,6 +208,8 @@ class Bundlerify {
                 this._bundler.on('update', this._bundle.bind(this));
             }
         }
+
+        return this._bundler;
     }
 
     _getDependency(name) {
@@ -225,8 +226,7 @@ class Bundlerify {
     }
 
     get bundler() {
-        this._createBundler();
-        return this._bundler;
+        return this._createBundler();
     }
 
     set watchify(value) {

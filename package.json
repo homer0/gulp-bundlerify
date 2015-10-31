@@ -16,11 +16,34 @@
     "gulp-if": "2.0.0",
     "gulp-uglify": "1.4.2",
     "gulp-streamify": "1.0.2",
-    "object-assign-deep": "0.0.4"
+    "object-assign-deep": "0.0.4",
+    "jest-cli": "0.5.10",
+    "babel-jest": "5.3.0",
+    "gulp": "3.9.0"
   },
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src/",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "test": "jest ./tests/index-test.js"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "scriptPreprocessor": "<rootDir>/node_modules/babel-jest",
+    "testDirectoryName": "tests",
+    "testFileExtensions": [
+      "es6",
+      "js",
+      "jsx"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "jsx",
+      "es6"
+    ],
+    "globals": {
+      "BrowserifyMockPath": "./browserify.js"
+    }
   },
   "author": "homer0",
   "license": "MIT",
