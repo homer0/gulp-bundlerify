@@ -1,8 +1,9 @@
 # gulp-bundlerify
 
-[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify)
-
 _(gulp-)_ Bundlerify it's something between a generator and a boilerplate for ES6 projects.
+
+[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master)
+![Coverage Status](https://david-dm.org/homer0/gulp-bundlerify.svg)
 
 It uses [Browserify](http://browserify.org/), [Babel](http://babeljs.io), [Watchify](https://github.com/substack/watchify) and [BrowserSync](http://www.browsersync.io) (among others) to build your ES6 project with just a couple of lines, but at the same time, it's also highly customizable: You can inject your own dependencies and tasks very easily.
 
