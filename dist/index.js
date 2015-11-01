@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 /**
  * Bundlerify it's something between a generator and a boilerplate for ES6 projects.
@@ -49,6 +49,8 @@ var Bundlerify = (function () {
      *     watchifyDebug: false, // alias for `.watchifyOptions.debug = false`
      *     browserSyncBaseDir: './', // alias for `.browserSyncOptions.server.baseDir = './'`
      *     browserSyncEnabled: false, // alias for `.browserSyncOptions.enabled = false`
+     *     jscs: false, // alias for `.lint.jscs`
+     *     eslint: false, // alias for `.lint.eslint`
      * });
      *
      * @param {Function}      gulp            - A reference to the main project's Gulp so the
@@ -65,9 +67,10 @@ var Bundlerify = (function () {
 
     function Bundlerify(gulp) {
         var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var assigner = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
 
         _classCallCheck(this, Bundlerify);
+
+        var assigner = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
 
         /**
          * A reference to the main project's Gulp.
@@ -120,7 +123,12 @@ var Bundlerify = (function () {
             },
             polyfillsEnabled: false,
             polyfills: ['whatwg-fetch/fetch', 'core-js/fn/symbol', 'core-js/fn/promise'],
-            uglify: false
+            uglify: false,
+            lint: {
+                jscs: true,
+                eslint: true,
+                target: ['./src/**/*.js']
+            }
         }, config);
 
         var distRoutePath = this.config.dist.dir;
@@ -208,6 +216,9 @@ var Bundlerify = (function () {
          * @ignore
          */
         this._gulpUglify = null;
+
+        this._gulpJSCS = null;
+        this._gulpESLint = null;
         /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
@@ -273,6 +284,11 @@ var Bundlerify = (function () {
             this.browserSync(this.config.browserSyncOptions);
             return this._bundle();
         }
+    }, {
+        key: 'lint',
+        value: function lint() {
+            return this.gulp.src(this.config.lint.target).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint())).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format())).pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
+        }
         /**
          * Register the plugin tasks on the main project's Gulp. Because it returns the instance
          * object, it can be used right after instantiating the plugin.
@@ -335,7 +351,9 @@ var Bundlerify = (function () {
             var shortSettings = {
                 watchifyDebug: 'watchifyOptions/debug',
                 browserSyncBaseDir: 'browserSyncOptions/server/baseDir',
-                browserSyncEnabled: 'browserSyncOptions/enabled'
+                browserSyncEnabled: 'browserSyncOptions/enabled',
+                jscs: 'lint/jscs',
+                eslint: 'lint/eslint'
             };
             Object.keys(shortSettings).forEach(function (setting) {
                 var shortValue = config[setting];
@@ -679,13 +697,25 @@ var Bundlerify = (function () {
         get: function get() {
             return this._gulpUglify || this._getDependency('gulp-uglify');
         }
+    }, {
+        key: 'gulpJSCS',
+        set: function set(value) {
+            this._gulpJSCS = value;
+        },
+        get: function get() {
+            return this._gulpJSCS || this._getDependency('gulp-jscs');
+        }
+    }, {
+        key: 'gulpESLint',
+        set: function set(value) {
+            this._gulpESLint = value;
+        },
+        get: function get() {
+            return this._gulpESLint || this._getDependency('gulp-eslint');
+        }
     }]);
 
     return Bundlerify;
 })();
-/**
- * @type {Bundlerify}
- * @module Bundlerify
- */
 
 exports.default = Bundlerify;

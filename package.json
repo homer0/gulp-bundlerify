@@ -1,6 +1,9 @@
 {
   "name": "gulp-bundlerify",
   "version": "1.0.0",
+  "dependencies": {
+
+  },
   "devDependencies": {
     "gulp-util": "3.0.7",
     "babel-cli": "6.0.2",
@@ -19,6 +22,9 @@
     "object-assign-deep": "0.0.4",
     "jest-cli": "0.5.10",
     "babel-jest": "5.3.0",
+    "gulp-eslint": "1.0.0",
+    "gulp-jscs": "2.0.0",
+
     "gulp": "3.9.0",
     "babel-eslint": "4.1.1",
     "eslint": "1.7.1",
@@ -30,6 +36,7 @@
     "build": "babel --presets es2015 -d dist/ src/",
     "prepublish": "npm run build",
     "test": "jest ./tests/index-test.js",
+    "coverage": "jest ./tests/index-test.js; open ./coverage/lcov-report/index.html",
     "lint": "eslint ./src/ ./tests/; jscs ./src/ ./tests/",
     "docs": "esdoc -c esdoc.json; open docs/index.html"
   },

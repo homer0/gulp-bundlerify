@@ -36,6 +36,8 @@ export default class Bundlerify {
      *     watchifyDebug: false, // alias for `.watchifyOptions.debug = false`
      *     browserSyncBaseDir: './', // alias for `.browserSyncOptions.server.baseDir = './'`
      *     browserSyncEnabled: false, // alias for `.browserSyncOptions.enabled = false`
+     *     jscs: false, // alias for `.lint.jscs`
+     *     eslint: false, // alias for `.lint.eslint`
      * });
      *
      * @param {Function}      gulp            - A reference to the main project's Gulp so the
@@ -106,6 +108,11 @@ export default class Bundlerify {
                 'core-js/fn/promise',
             ],
             uglify: false,
+            lint: {
+                jscs: true,
+                eslint: true,
+                target: ['./src/**/*.js'],
+            },
         }, config);
 
         let distRoutePath = this.config.dist.dir;
@@ -193,6 +200,9 @@ export default class Bundlerify {
          * @ignore
          */
         this._gulpUglify = null;
+
+        this._gulpJSCS = null;
+        this._gulpESLint = null;
         /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
@@ -248,6 +258,16 @@ export default class Bundlerify {
         return this._bundle();
     }
     /**
+     * Lint the project code. This method it's called by the `serve` task.
+     * @return {Function} It returns the stream used to create and write the build.
+     */
+    lint() {
+        return this.gulp.src(this.config.lint.target)
+        .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint()))
+        .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format()))
+        .pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
+    }
+    /**
      * Register the plugin tasks on the main project's Gulp. Because it returns the instance
      * object, it can be used right after instantiating the plugin.
      * @example
@@ -301,6 +321,8 @@ export default class Bundlerify {
             watchifyDebug: 'watchifyOptions/debug',
             browserSyncBaseDir: 'browserSyncOptions/server/baseDir',
             browserSyncEnabled: 'browserSyncOptions/enabled',
+            jscs: 'lint/jscs',
+            eslint: 'lint/eslint',
         };
         Object.keys(shortSettings).forEach((setting) => {
             const shortValue = config[setting];
@@ -595,5 +617,37 @@ export default class Bundlerify {
      */
     get gulpUglify() {
         return this._gulpUglify || this._getDependency('gulp-uglify');
+    }
+    /**
+     * Set a custom version of gulp-jscs.
+     * @type {Function}
+     */
+    set gulpJSCS(value) {
+        this._gulpJSCS = value;
+    }
+    /**
+     * Get the gulp-jscs instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get gulpJSCS() {
+        return this._gulpJSCS || this._getDependency('gulp-jscs');
+    }
+    /**
+     * Set a custom version of gulp-eslint.
+     * @type {Function}
+     */
+    set gulpESLint(value) {
+        this._gulpESLint = value;
+    }
+    /**
+     * Get the gulp-eslint instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get gulpESLint() {
+        return this._gulpESLint || this._getDependency('gulp-eslint');
     }
 }

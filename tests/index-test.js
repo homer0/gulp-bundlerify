@@ -150,6 +150,14 @@ describe('gulp-bundlerify', () => {
                 name: 'My Custom Uglifier',
                 module: 'gulp-uglify',
             },
+            gulpJSCS: {
+                name: 'My Custom JSCS',
+                module: 'gulp-jscs',
+            },
+            gulpESLint: {
+                name: 'My Custom ESLint',
+                module: 'gulp-eslint',
+            },
         };
 
         const instance = new Bundlerify(gulp, require('object-assign-deep'));
@@ -207,6 +215,16 @@ describe('gulp-bundlerify', () => {
         expect(instance.gulpUglify).toEqual(dummyValues.gulpUglify.name);
         instance.gulpUglify = null;
         expect(instance.gulpUglify).toEqual(require(dummyValues.gulpUglify.module));
+
+        instance.gulpJSCS = dummyValues.gulpJSCS.name;
+        expect(instance.gulpJSCS).toEqual(dummyValues.gulpJSCS.name);
+        instance.gulpJSCS = null;
+        expect(instance.gulpJSCS).toEqual(require(dummyValues.gulpJSCS.module));
+
+        instance.gulpESLint = dummyValues.gulpESLint.name;
+        expect(instance.gulpESLint).toEqual(dummyValues.gulpESLint.name);
+        instance.gulpESLint = null;
+        expect(instance.gulpESLint).toEqual(require(dummyValues.gulpESLint.module));
     });
     /**
      * @test {Bundlerify#tasks}
@@ -288,6 +306,28 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls.length).toEqual(1);
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
+    });
+    /**
+     * @test {Bundlerify#lint}
+     */
+    it('should run the lint task', () => {
+        const mockGulp = new BrowserifyMock();
+        const mockGulpIf = jest.genMockFromModule('gulp-if');
+        const mockGulpESLint = jest.genMockFromModule('gulp-eslint');
+        const mockGulpJSCS = jest.genMockFromModule('gulp-jscs');
+
+        const instance = new Bundlerify(mockGulp);
+        instance.gulpIf = mockGulpIf;
+        instance.gulpJSCS = mockGulpJSCS;
+        instance.gulpESLint = mockGulpESLint;
+        instance.lint();
+
+        expect(mockGulp.srcMock.mock.calls.length).toEqual(1);
+        expect(mockGulp.pipeMock.mock.calls.length).toEqual(3);
+        expect(mockGulpIf.mock.calls.length).toEqual(3);
+        expect(mockGulpESLint.mock.calls.length).toEqual(1);
+        expect(mockGulpESLint.format.mock.calls.length).toEqual(1);
+        expect(mockGulpJSCS.mock.calls.length).toEqual(1);
     });
     /**
      * @test {Bundlerify#build}
