@@ -2,7 +2,7 @@
 
 _(gulp-)_ Bundlerify it's something between a generator and a boilerplate for ES6 projects.
 
-[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) ![Coverage Status](https://david-dm.org/homer0/gulp-bundlerify.svg)
+[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) [![Dependencies status](https://david-dm.org/homer0/gulp-bundlerify.svg)](https://david-dm.org/homer0/gulp-bundlerify)
 
 
 
