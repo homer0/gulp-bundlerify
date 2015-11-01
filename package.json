@@ -1,6 +1,7 @@
 {
   "name": "gulp-bundlerify",
   "version": "1.0.0",
+  "repository": "homer0/gulp-bundlerify",
   "dependencies": {
 
   },
@@ -30,7 +31,9 @@
     "eslint": "1.7.1",
     "jscs": "2.5.0",
     "esdoc": "0.4.1",
-    "esdoc-es7-plugin": "v0.0.2"
+    "esdoc-es7-plugin": "v0.0.2",
+
+    "coveralls": "2.11.4"
   },
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src/",
@@ -59,7 +62,7 @@
       "BrowserifyMockPath": "./browserify.js"
     }
   },
-  "author": "homer0",
+  "author": "Leonardo Apiwan (@homer0)",
   "license": "MIT",
   "main": "dist/index.js"
 }
