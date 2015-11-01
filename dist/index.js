@@ -128,6 +128,12 @@ var Bundlerify = (function () {
                 jscs: true,
                 eslint: true,
                 target: ['./src/**/*.js']
+            },
+            esdocOptions: {
+                enabled: true,
+                source: './src',
+                destination: './docs',
+                plugins: [{ name: 'esdoc-es7-plugin' }]
             }
         }, config);
 
@@ -216,9 +222,27 @@ var Bundlerify = (function () {
          * @ignore
          */
         this._gulpUglify = null;
-
+        /**
+         * A custom version of gulp-jscs that may be injected using the `gulpJSCS` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
         this._gulpJSCS = null;
+        /**
+         * A custom version of gulp-eslint that may be injected using the `gulpESLint` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
         this._gulpESLint = null;
+        /**
+         * A custom version of ESDoc that may be injected using the `esdoc` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._esdoc = null;
         /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
@@ -284,10 +308,20 @@ var Bundlerify = (function () {
             this.browserSync(this.config.browserSyncOptions);
             return this._bundle();
         }
+        /**
+         * Lint the project code. This method it's called by the `serve` task.
+         * @return {Function} It returns the stream used to create and write the build.
+         */
+
     }, {
         key: 'lint',
         value: function lint() {
             return this.gulp.src(this.config.lint.target).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint())).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format())).pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
+        }
+    }, {
+        key: 'docs',
+        value: function docs() {
+            return this.esdoc.generate(this.config.esdocOptions, this._getDependency('esdoc/out/src/Publisher/publish'));
         }
         /**
          * Register the plugin tasks on the main project's Gulp. Because it returns the instance
@@ -697,21 +731,65 @@ var Bundlerify = (function () {
         get: function get() {
             return this._gulpUglify || this._getDependency('gulp-uglify');
         }
+        /**
+         * Set a custom version of gulp-jscs.
+         * @type {Function}
+         */
+
     }, {
         key: 'gulpJSCS',
         set: function set(value) {
             this._gulpJSCS = value;
-        },
+        }
+        /**
+         * Get the gulp-jscs instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
         get: function get() {
             return this._gulpJSCS || this._getDependency('gulp-jscs');
         }
+        /**
+         * Set a custom version of gulp-eslint.
+         * @type {Function}
+         */
+
     }, {
         key: 'gulpESLint',
         set: function set(value) {
             this._gulpESLint = value;
-        },
+        }
+        /**
+         * Get the gulp-eslint instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
         get: function get() {
             return this._gulpESLint || this._getDependency('gulp-eslint');
+        }
+        /**
+         * Set a custom version of esdoc.
+         * @type {Function}
+         */
+
+    }, {
+        key: 'esdoc',
+        set: function set(value) {
+            this._esdoc = value;
+        }
+        /**
+         * Get the esdoc instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
+        get: function get() {
+            return this._esdoc || this._getDependency('esdoc');
         }
     }]);
 

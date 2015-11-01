@@ -113,6 +113,14 @@ export default class Bundlerify {
                 eslint: true,
                 target: ['./src/**/*.js'],
             },
+            esdocOptions: {
+                enabled: true,
+                source: './src',
+                destination: './docs',
+                plugins: [
+                    {name: 'esdoc-es7-plugin'},
+                ],
+            },
         }, config);
 
         let distRoutePath = this.config.dist.dir;
@@ -200,9 +208,35 @@ export default class Bundlerify {
          * @ignore
          */
         this._gulpUglify = null;
-
+        /**
+         * A custom version of gulp-jscs that may be injected using the `gulpJSCS` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
         this._gulpJSCS = null;
+        /**
+         * A custom version of gulp-eslint that may be injected using the `gulpESLint` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
         this._gulpESLint = null;
+        /**
+         * A custom version of ESDoc that may be injected using the `esdoc` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._esdoc = null;
+        /**
+         * A custom version of the ESDoc Publisher that may be injected using the
+         * `esdocPublisher` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._esdocPublisher = null;
         /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
@@ -266,6 +300,13 @@ export default class Bundlerify {
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint()))
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format()))
         .pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
+    }
+    /**
+     * Generate the project documentation using ESDoc. This method it's called by the `docs` task.
+     * @return {Function} The result of the ESDoc generator.
+     */
+    docs() {
+        return this.esdoc.generate(this.config.esdocOptions, this.esdocPublisher);
     }
     /**
      * Register the plugin tasks on the main project's Gulp. Because it returns the instance
@@ -649,5 +690,37 @@ export default class Bundlerify {
      */
     get gulpESLint() {
         return this._gulpESLint || this._getDependency('gulp-eslint');
+    }
+    /**
+     * Set a custom version of ESDoc.
+     * @type {Function}
+     */
+    set esdoc(value) {
+        this._esdoc = value;
+    }
+    /**
+     * Get the ESDoc instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get esdoc() {
+        return this._esdoc || this._getDependency('esdoc');
+    }
+    /**
+     * Set a custom version of the ESDoc Publisher.
+     * @type {Function}
+     */
+    set esdocPublisher(value) {
+        this._esdocPublisher = value;
+    }
+    /**
+     * Get the ESDoc Publisher instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get esdocPublisher() {
+        return this._esdocPublisher || this._getDependency('esdoc/out/src/Publisher/publish');
     }
 }

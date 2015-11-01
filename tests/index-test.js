@@ -158,6 +158,14 @@ describe('gulp-bundlerify', () => {
                 name: 'My Custom ESLint',
                 module: 'gulp-eslint',
             },
+            esdoc: {
+                name: 'My Custom ESDoc',
+                module: 'esdoc',
+            },
+            esdocPublisher: {
+                name: 'My Custom Publisher',
+                module: 'esdoc/out/src/Publisher/publish',
+            },
         };
 
         const instance = new Bundlerify(gulp, require('object-assign-deep'));
@@ -225,6 +233,16 @@ describe('gulp-bundlerify', () => {
         expect(instance.gulpESLint).toEqual(dummyValues.gulpESLint.name);
         instance.gulpESLint = null;
         expect(instance.gulpESLint).toEqual(require(dummyValues.gulpESLint.module));
+
+        instance.esdoc = dummyValues.esdoc.name;
+        expect(instance.esdoc).toEqual(dummyValues.esdoc.name);
+        instance.esdoc = null;
+        expect(instance.esdoc).toEqual(require(dummyValues.esdoc.module));
+
+        instance.esdocPublisher = dummyValues.esdocPublisher.name;
+        expect(instance.esdocPublisher).toEqual(dummyValues.esdocPublisher.name);
+        instance.esdocPublisher = null;
+        expect(instance.esdocPublisher).toEqual(require(dummyValues.esdocPublisher.module));
     });
     /**
      * @test {Bundlerify#tasks}
@@ -328,6 +346,18 @@ describe('gulp-bundlerify', () => {
         expect(mockGulpESLint.mock.calls.length).toEqual(1);
         expect(mockGulpESLint.format.mock.calls.length).toEqual(1);
         expect(mockGulpJSCS.mock.calls.length).toEqual(1);
+    });
+    /**
+     * @test {Bundlerify#docs}
+     */
+    it('should run the docs task', () => {
+        const mockESDoc = jest.genMockFromModule('esdoc');
+        const instance = new Bundlerify(gulp);
+        instance.esdoc = mockESDoc;
+        instance.docs();
+        expect(mockESDoc.generate.mock.calls.length).toEqual(1);
+        expect(mockESDoc.generate.mock.calls[0][0]).toEqual(instance.config.esdocOptions);
+        expect(mockESDoc.generate.mock.calls[0][1]).toEqual(jasmine.any(Function));
     });
     /**
      * @test {Bundlerify#build}
