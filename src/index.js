@@ -5,7 +5,7 @@
  * your own dependencies and tasks.
  * @version 1.0.0
  */
-class Bundlerify {
+export default class Bundlerify {
     /**
      * Create a new instance of the plugin.
      * @example
@@ -597,8 +597,3 @@ class Bundlerify {
         return this._gulpUglify || this._getDependency('gulp-uglify');
     }
 }
-/**
- * @type {Bundlerify}
- * @module Bundlerify
- */
-export default Bundlerify;

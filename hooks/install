@@ -1,0 +1,10 @@
+#!/bin/sh
+if [ -d ".git" ]; then
+    ln -sv ../../hooks/pre-commit.local ./.git/hooks/pre-commit
+    ln -sv ../../hooks/post-merge.local ./.git/hooks/post-merge
+    echo "Hooks installed"
+    exit 0
+fi
+
+echo ".git directory not found"
+exit 1
