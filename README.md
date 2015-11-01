@@ -429,6 +429,10 @@ esdocPublisher = myCustomESDocPublisher;
 
 ## Development
 
+### Install Git hooks
+
+    ./hooks/install
+
 ### npm tasks
 
 - `npm run build`: Generate a new build of the plugin.
