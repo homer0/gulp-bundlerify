@@ -114,13 +114,6 @@ var Bundlerify = (function () {
             babelifyOptions: {
                 presets: ['es2015']
             },
-            tasks: {
-                build: 'build',
-                serve: 'serve',
-                clean: 'clean',
-                lint: 'lint',
-                docs: 'docs'
-            },
             polyfillsEnabled: false,
             polyfills: ['whatwg-fetch/fetch', 'core-js/fn/symbol', 'core-js/fn/promise'],
             uglify: false,
@@ -134,6 +127,13 @@ var Bundlerify = (function () {
                 source: './src',
                 destination: './docs',
                 plugins: [{ name: 'esdoc-es7-plugin' }]
+            },
+            tasks: {
+                build: 'build',
+                serve: 'serve',
+                clean: 'clean',
+                lint: 'lint',
+                docs: 'docs'
             }
         }, config);
 
@@ -244,6 +244,14 @@ var Bundlerify = (function () {
          */
         this._esdoc = null;
         /**
+         * A custom version of the ESDoc Publisher that may be injected using the
+         * `esdocPublisher` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._esdocPublisher = null;
+        /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
          * @type {Boolean}
@@ -318,10 +326,15 @@ var Bundlerify = (function () {
         value: function lint() {
             return this.gulp.src(this.config.lint.target).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint())).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format())).pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
         }
+        /**
+         * Generate the project documentation using ESDoc. This method it's called by the `docs` task.
+         * @return {Function} The result of the ESDoc generator.
+         */
+
     }, {
         key: 'docs',
         value: function docs() {
-            return this.esdoc.generate(this.config.esdocOptions, this._getDependency('esdoc/out/src/Publisher/publish'));
+            return this.esdoc.generate(this.config.esdocOptions, this.esdocPublisher);
         }
         /**
          * Register the plugin tasks on the main project's Gulp. Because it returns the instance
@@ -772,7 +785,7 @@ var Bundlerify = (function () {
             return this._gulpESLint || this._getDependency('gulp-eslint');
         }
         /**
-         * Set a custom version of esdoc.
+         * Set a custom version of ESDoc.
          * @type {Function}
          */
 
@@ -782,7 +795,7 @@ var Bundlerify = (function () {
             this._esdoc = value;
         }
         /**
-         * Get the esdoc instance the plugin it's using. If a custom version was injected
+         * Get the ESDoc instance the plugin it's using. If a custom version was injected
          * using the setter, it will return that, otherwise, it will require the one on the plugin
          * `package.json`.
          * @type {Function}
@@ -790,6 +803,26 @@ var Bundlerify = (function () {
         ,
         get: function get() {
             return this._esdoc || this._getDependency('esdoc');
+        }
+        /**
+         * Set a custom version of the ESDoc Publisher.
+         * @type {Function}
+         */
+
+    }, {
+        key: 'esdocPublisher',
+        set: function set(value) {
+            this._esdocPublisher = value;
+        }
+        /**
+         * Get the ESDoc Publisher instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
+        get: function get() {
+            return this._esdocPublisher || this._getDependency('esdoc/out/src/Publisher/publish');
         }
     }]);
 

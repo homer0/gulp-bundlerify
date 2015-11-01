@@ -329,7 +329,7 @@ export default class Bundlerify {
                         taskDeps = taskDeps.concat(defaultTaskDeps);
                     }
 
-                    this.gulp.task(taskName, taskDeps, (callback) => {
+                    this.gulp.task(taskName, taskDeps, ((callback) => {
                         let result = null;
                         if (task.method) {
                             result = task.method(this[task].bind(this), callback);
@@ -338,11 +338,11 @@ export default class Bundlerify {
                         }
 
                         return result;
-                    }.bind(this));
+                    }).bind(this));
                 } else {
-                    this.gulp.task(name, defaultTaskDeps, (callback) => {
+                    this.gulp.task(name, defaultTaskDeps, ((callback) => {
                         return this[task](callback);
-                    }.bind(this));
+                    }).bind(this));
                 }
             }
 
