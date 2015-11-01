@@ -94,13 +94,6 @@ export default class Bundlerify {
             babelifyOptions: {
                 presets: ['es2015'],
             },
-            tasks: {
-                build: 'build',
-                serve: 'serve',
-                clean: 'clean',
-                lint: 'lint',
-                docs: 'docs',
-            },
             polyfillsEnabled: false,
             polyfills: [
                 'whatwg-fetch/fetch',
@@ -120,6 +113,13 @@ export default class Bundlerify {
                 plugins: [
                     {name: 'esdoc-es7-plugin'},
                 ],
+            },
+            tasks: {
+                build: 'build',
+                serve: 'serve',
+                clean: 'clean',
+                lint: 'lint',
+                docs: 'docs',
             },
         }, config);
 

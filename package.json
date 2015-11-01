@@ -36,7 +36,7 @@
     "build": "babel --presets es2015 -d dist/ src/",
     "prepublish": "npm run build",
     "test": "jest ./tests/index-test.js",
-    "coverage": "jest ./tests/index-test.js; open ./coverage/lcov-report/index.html",
+    "coverage": "npm test; open ./coverage/lcov-report/index.html",
     "lint": "eslint ./src/ ./tests/; jscs ./src/ ./tests/",
     "docs": "esdoc -c esdoc.json; open docs/index.html"
   },
