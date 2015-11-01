@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "repository": "homer0/gulp-bundlerify",
   "dependencies": {
-
-  },
-  "devDependencies": {
     "gulp-util": "3.0.7",
     "babel-cli": "6.0.2",
     "babel-preset-es2015": "6.0.11",
