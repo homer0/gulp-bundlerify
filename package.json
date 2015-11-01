@@ -22,13 +22,16 @@
     "gulp": "3.9.0",
     "babel-eslint": "4.1.1",
     "eslint": "1.7.1",
-    "jscs": "2.5.0"
+    "jscs": "2.5.0",
+    "esdoc": "0.4.1",
+    "esdoc-es7-plugin": "v0.0.2"
   },
   "scripts": {
     "build": "babel --presets es2015 -d dist/ src/",
     "prepublish": "npm run build",
     "test": "jest ./tests/index-test.js",
-    "lint": "eslint ./src/ ./tests/; jscs ./src/ ./tests/"
+    "lint": "eslint ./src/ ./tests/; jscs ./src/ ./tests/",
+    "docs": "esdoc -c esdoc.json; open docs/index.html"
   },
   "jest": {
     "collectCoverage": true,

@@ -1,0 +1,10 @@
+{
+	"source": "./src",
+	"destination": "./docs",
+	"excludes": [
+		"browserify.js"
+	],
+	"plugins": [
+  		{"name": "esdoc-es7-plugin"}
+	]
+}

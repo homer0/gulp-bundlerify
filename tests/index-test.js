@@ -4,13 +4,17 @@ jest.autoMockOff();
 const Bundlerify = require('../src/index');
 const BrowserifyMock = require(BrowserifyMockPath);
 const gulp = require('gulp');
-
+/**
+ * @test {Bundlerify}
+ */
 describe('gulp-bundlerify', () => {
 
     afterEach(() => {
         const instance = null;
     });
-
+    /**
+     * @test {Bundlerify#constructor}
+     */
     it('should create a new instance and have public methods', () => {
         const instance = new Bundlerify(gulp);
         expect(instance).toEqual(jasmine.any(Bundlerify));
@@ -19,7 +23,9 @@ describe('gulp-bundlerify', () => {
         expect(instance.serve).toEqual(jasmine.any(Function));
         expect(instance.tasks).toEqual(jasmine.any(Function));
     });
-
+    /**
+     * @test {Bundlerify#config}
+     */
     it('should write the configuration correctly', () => {
         const dummyConfig = {
             mainFile: './test.js',
@@ -62,7 +68,9 @@ describe('gulp-bundlerify', () => {
         const presetsValue = ['es2015'].concat(dummyConfig.babelifyOptions.presets);
         expect(config.babelifyOptions.presets).toEqual(presetsValue);
     });
-
+    /**
+     * @test {Bundlerify#_expandShorthandSettings}
+     */
     it('should expand shorthand settings', () => {
         const dummyConfig = {
             watchifyDebug: true,
@@ -77,13 +85,17 @@ describe('gulp-bundlerify', () => {
         );
         expect(instance.config.browserSyncOptions.enabled).toBeFalsy();
     });
-
+    /**
+     * @test {Bundlerify#constructor}
+     */
     it('should be able to be instantiated just with a filepath', () => {
         const dummyFile = './Rosario.js';
         const instance = new Bundlerify(gulp, dummyFile);
         expect(instance.config.mainFile).toEqual(dummyFile);
     });
-
+    /**
+     * @test {Bundlerify#constructor}
+     */
     it('should create a Browser Sync router for the dist directory', () => {
         const dummyPath = '/charito/';
         const instance = new Bundlerify(gulp, {
@@ -93,7 +105,9 @@ describe('gulp-bundlerify', () => {
         });
         expect(instance.config.browserSyncOptions.server.routes[dummyPath]).toEqual(dummyPath);
     });
-
+    /**
+     * @test {Bundlerify#_getDependency}
+     */
     it('should be able to overwrite and obtain the dependencies modules', () => {
         const dummyValues = {
             watchify: {
@@ -132,7 +146,7 @@ describe('gulp-bundlerify', () => {
                 name: 'My Custom GulpStreamify',
                 module: 'gulp-streamify',
             },
-            uglifier: {
+            gulpUglify: {
                 name: 'My Custom Uglifier',
                 module: 'gulp-uglify',
             },
@@ -189,12 +203,14 @@ describe('gulp-bundlerify', () => {
         instance.gulpStreamify = null;
         expect(instance.gulpStreamify).toEqual(require(dummyValues.gulpStreamify.module));
 
-        instance.uglifier = dummyValues.uglifier.name;
-        expect(instance.uglifier).toEqual(dummyValues.uglifier.name);
-        instance.uglifier = null;
-        expect(instance.uglifier).toEqual(require(dummyValues.uglifier.module));
+        instance.gulpUglify = dummyValues.gulpUglify.name;
+        expect(instance.gulpUglify).toEqual(dummyValues.gulpUglify.name);
+        instance.gulpUglify = null;
+        expect(instance.gulpUglify).toEqual(require(dummyValues.gulpUglify.module));
     });
-
+    /**
+     * @test {Bundlerify#tasks}
+     */
     it('should register the basic tasks', () => {
         const mockGulp = jest.genMockFromModule('gulp');
         const mockFunc = jest.genMockFunction();
@@ -225,7 +241,9 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
     });
-
+    /**
+     * @test {Bundlerify#tasks}
+     */
     it('should overwrite the basic tasks settings', () => {
         const mockGulp = jest.genMockFromModule('gulp');
         const mockBuildFunc = jest.genMockFunction();
@@ -258,7 +276,9 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
     });
-
+    /**
+     * @test {Bundlerify#clean}
+     */
     it('should run the clean task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
         const instance = new Bundlerify(gulp);
@@ -269,7 +289,9 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
     });
-
+    /**
+     * @test {Bundlerify#build}
+     */
     it('should run the build task', () => {
         const mockBrowserify = new BrowserifyMock();
         const mockGulp = jest.genMockFromModule('gulp');
@@ -341,7 +363,9 @@ describe('gulp-bundlerify', () => {
 
         instance.build();
     });
-
+    /**
+     * @test {Bundlerify#serve}
+     */
     it('should run the serve task', () => {
         const mockBrowserify = new BrowserifyMock();
         const mockGulp = jest.genMockFromModule('gulp');
