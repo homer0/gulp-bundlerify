@@ -2,7 +2,7 @@
 
 _(gulp-)_ Bundlerify it's something between a generator and a boilerplate for ES6 projects.
 
-[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) [![Dependencies status](https://david-dm.org/homer0/gulp-bundlerify.svg)](https://david-dm.org/homer0/gulp-bundlerify)
+[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) [![Dependencies status](https://david-dm.org/homer0/gulp-bundlerify.svg)](https://david-dm.org/homer0/gulp-bundlerify) [![Dev dependencies status](https://david-dm.org/homer0/gulp-bundlerify/dev-status.svg)](https://david-dm.org/homer0/gulp-bundlerify#info=devDependencies)
 
 
 
@@ -174,9 +174,11 @@ new Bundlerify(gulp, {
     }
 }).tasks();
 ```
-- `lint.jscs`: If your code should be analyzed with JSCS or not.
-- `lint.eslint`: If your code should be analyzed with ESLint or not.
+- `lint.jscs`: If your code should be analyzed with [JSCS](http://jscs.info) or not.
+- `lint.eslint`: If your code should be analyzed with [ESLint](http://eslint.org) or not.
 - `lint.target`: A glob or an array of globs that will be analyzed. Glob refers to [node-glob syntax](https://github.com/isaacs/node-glob) or it can be a direct file path.
+
+Check the **Extras** section for more information about [JSCS](http://jscs.info) and [ESLint](http://eslint.org).
 
 ### Docs
 
@@ -196,6 +198,8 @@ new Bundlerify(gulp, {
 - `esdocOptions.source`: The directory where the documented files are.
 - `esdocOptions.destination`: The directory where the docs will be generated.
 - `esdocOptions.plugins`: A list of plugins for the ESDoc generator. In this case, it just uses the one for the ES6 syntax.
+
+Check the **Extras** section for more information about [ESDoc](https://esdoc.org).
 
 [ESDoc docs](https://esdoc.org/api.html) (:P)
 
@@ -430,6 +434,29 @@ There are three other dependencies that can't be "injected", but that's because 
 - [whatwg-fetch](https://www.npmjs.com/package/whatwg-fetch): The `Fetch` polyfill for old browsers. You can edit the `polyfills` setting to remove it from the list.
 - [core-js](https://www.npmjs.com/package/core-js): More Polyfills, Bundlerify uses two from by this package: `Symbol` and `Promise`, and like with `Fetch`, you can edit the `polyfills` setting to remove them.
 
+## Extras
+
+### JSCS
+
+> JSCS is a code style linter for programmatically enforcing your style guide. You can configure JSCS for your project in detail using over 150 validation rules, including presets from popular style guides like jQuery, Airbnb, Google, and more.
+
+If you want a quick start, you can copy the [.jscscr](./.jscsrc) file from this repository and put it on the root of your project, then just run the `lint` task.
+Feel free to modify your `.jscsrc` with your own rules and presets.
+
+[JSCS Overview](http://jscs.info/overview).
+
+#### ESLint
+
+> The pluggable linting utility for JavaScript and JSX.
+
+The short version, it's like JSHint, but it supports plugins :). Like with JSCS, you can copy the [.eslintrc](./.eslintrc) file from this repository and run the `lint` task.
+
+#### ESDoc
+
+> ESDoc is a documentation generator for JavaScript(ES6).
+
+that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but Bundlerify doesn't need because you can send the ESDoc configuration on the `esdocOptions` setting option.
+
 ## Development
 
 ### Install Git hooks
@@ -443,6 +470,18 @@ There are three other dependencies that can't be "injected", but that's because 
 - `npm run coverage`: Run the unit tests and open the coverage report on the browser.
 - `npm run lint`: Lint the plugin's code with JSCS and ESLint.
 - `npm run docs`: Generate the project documentation.
+
+## Version History
+
+#### 1.0.2
+
+- Added compatibility with node `v0.12.6`.
+- Better organization of the dependencies and development dependencies on the `package.json`.
+- Updated the `README` with more information about dependencies, ESLint, JSCS and ESDoc.
+- Included a version history on the `README`.
+
+#### 1.0.0 and 1.0.1
+Initial version. The reason I made an empty release was because I published it to early in [npmjs](http://npmjs.com) and I needed to refresh it.
 
 ## License
 
