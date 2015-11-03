@@ -8,7 +8,7 @@ Object.defineProperty(exports, "__esModule", {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 /**
  * Bundlerify it's something between a generator and a boilerplate for ES6 projects.
@@ -38,14 +38,8 @@ var Bundlerify = (function () {
      * // Instantiate with the entry file and the default settings
      * const instanceThree = new Bundlerify(gulp, './myApp/index.js');
      *
-     * // Instantiate with a custom function to merge the config.
-     * // The reason of this is that one of the main features of Bundlerify it's that all the
-     * // dependencies can be injected, but the constructor needs to merge the custom
-     * // configuration with the default values and `Object.assign()` doesn't go in deep.
-     * const instanceThree = new Bundlerify(gulp, './myApp/index.js', require('_').extend);
-     *
      * // Instantiate with shorthand settings
-     * const instanceFour = new Bundlerify(gulp, {
+     * const instanceThree = new Bundlerify(gulp, {
      *     watchifyDebug: false, // alias for `.watchifyOptions.debug = false`
      *     browserSyncBaseDir: './', // alias for `.browserSyncOptions.server.baseDir = './'`
      *     browserSyncEnabled: false, // alias for `.browserSyncOptions.enabled = false`
@@ -59,37 +53,31 @@ var Bundlerify = (function () {
      *                                          default settings, but if a string it's used, it
      *                                          would be the same as using an Object with just the
      *                                          `mainFile` setting.
-     * @param {Function}      [assigner=null] - A custom function to merge objects. Please check
-     *                                          the example of this method to understand why this
-     *                                          is needed.
      * @public
      */
 
     function Bundlerify(gulp) {
-        var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
         _classCallCheck(this, Bundlerify);
 
-        var assigner = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
+        var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         /**
          * A reference to the main project's Gulp.
          * @type {Function}
          */
         this.gulp = gulp;
-        assigner = assigner || require('object-assign-deep');
         if (typeof config === 'string') {
             config = {
                 mainFile: config
             };
         } else {
-            config = this._expandShorthandSettings(assigner({}, config));
+            config = this._expandShorthandSettings(this._mergeObjects({}, config));
         }
         /**
          * The Bundlerify main settings.
          * @type {Object}
          */
-        this.config = assigner({
+        this.config = this._mergeObjects({
             mainFile: './index.js',
             dist: {
                 file: 'build.js',
@@ -138,7 +126,7 @@ var Bundlerify = (function () {
         }, config);
 
         var distRoutePath = this.config.dist.dir;
-        if (distRoutePath.startsWith('.')) {
+        if (distRoutePath.substr(0, 1) === '.') {
             distRoutePath = distRoutePath.substr(1);
         }
 
@@ -365,16 +353,16 @@ var Bundlerify = (function () {
                         _this.gulp.task(taskName, taskDeps, (function (callback) {
                             var result = null;
                             if (task.method) {
-                                result = task.method(_this[task].bind(_this), callback);
+                                result = task.method(_this[name].bind(_this), callback);
                             } else {
-                                result = _this[task](callback);
+                                result = _this[name](callback);
                             }
 
                             return result;
                         }).bind(_this));
                     } else {
                         _this.gulp.task(name, defaultTaskDeps, (function (callback) {
-                            return _this[task](callback);
+                            return _this[name](callback);
                         }).bind(_this));
                     }
                 }
@@ -411,6 +399,77 @@ var Bundlerify = (function () {
             }, this);
 
             return config;
+        }
+        /**
+         * It will merge a given list of Objects into a new one. It works recursively, so any "sub
+         * objects" will also be merged. This method returns a new Object, so none of the targets will
+         * be modified.
+         * @example
+         * const a = {
+         *     b: 'c',
+         *     d: {
+         *         e: 'f',
+         *         g: {
+         *             h: ['i'],
+         *         },
+         *     },
+         *     j: 'k',
+         * };
+         * const b = {
+         *     j: 'key',
+         *     d: {
+         *         g: {
+         *             h: ['x', 'y', 'z'],
+         *             l: 'm',
+         *         },
+         *     },
+         * };
+         * // The result will be
+         * // {
+         * //     b: 'c',
+         * //     d: {
+         * //         e: 'f',
+         * //         g: {
+         * //             h: ['x', 'y', 'z'],
+         * //             l: 'm',
+         * //         }
+         * //     },
+         * //     j: 'k',
+         * // }
+         * ._mergeObjects(a, b);
+         *
+         * @param  {...Object} objects - The list of objects to merge.
+         * @return {Object} A new object with the merged properties.
+         * @private
+         * @ignore
+         */
+
+    }, {
+        key: '_mergeObjects',
+        value: function _mergeObjects() {
+            var _this3 = this;
+
+            var result = {};
+
+            for (var _len = arguments.length, objects = Array(_len), _key = 0; _key < _len; _key++) {
+                objects[_key] = arguments[_key];
+            }
+
+            objects.forEach(function (obj) {
+                if (typeof obj !== 'undefined') {
+                    Object.keys(obj).forEach(function (objKey) {
+                        var current = obj[objKey];
+                        var target = result[objKey];
+                        if (typeof target !== 'undefined' && current.constructor && current.constructor === Object && target.constructor && target.constructor === Object) {
+                            result[objKey] = _this3._mergeObjects(target, current);
+                        } else {
+                            result[objKey] = current;
+                        }
+                    }, _this3);
+                }
+            }, this);
+
+            return result;
         }
         /**
          * A utility method used when expanding a shorthand setting. It uses a directory-type path,
@@ -490,7 +549,7 @@ var Bundlerify = (function () {
         key: '_createBundler',
         value: function _createBundler() {
             if (this._bundler === null) {
-                var watchifyOptions = Object.assign(this.config.watchifyOptions, this.watchify.args);
+                var watchifyOptions = this._mergeObjects(this.config.watchifyOptions, this.watchify.args);
                 var browserifyBuild = this.browserify(this._getEntryFileSettings(), watchifyOptions);
                 this._bundler = this._watch ? this.watchify(browserifyBuild) : browserifyBuild;
                 if (this._watch) {

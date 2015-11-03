@@ -2,7 +2,7 @@
 
 _(gulp-)_ Bundlerify it's something between a generator and a boilerplate for ES6 projects.
 
-[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) [![Dependencies status](https://david-dm.org/homer0/gulp-bundlerify.svg)](https://david-dm.org/homer0/gulp-bundlerify)
+[![Build Status](https://travis-ci.org/homer0/gulp-bundlerify.svg?branch=master)](https://travis-ci.org/homer0/gulp-bundlerify) [![Coverage Status](https://coveralls.io/repos/homer0/gulp-bundlerify/badge.svg?branch=master&service=github)](https://coveralls.io/github/homer0/gulp-bundlerify?branch=master) [![Documentation Status](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/badge.svg)](https://doc.esdoc.org/github.com/homer0/gulp-bundlerify/) [![Dependencies status](https://david-dm.org/homer0/gulp-bundlerify.svg)](https://david-dm.org/homer0/gulp-bundlerify) [![Dev dependencies status](https://david-dm.org/homer0/gulp-bundlerify/dev-status.svg)](https://david-dm.org/homer0/gulp-bundlerify#info=devDependencies)
 
 
 
@@ -26,7 +26,7 @@ Well, the solution:
 |--------------|------------------------------------------------------------------|
 | Package      | gulp-bundlerify                                                  |
 | Description  | Something between a generator and a boilerplate for ES6 projects |
-| Node Version | >= v4.0.0                                                        |
+| Node Version | >= v0.12.6 (You need >= v4.0.0 for the tests)                    |
 
 
 ## Installation
@@ -174,9 +174,11 @@ new Bundlerify(gulp, {
     }
 }).tasks();
 ```
-- `lint.jscs`: If your code should be analyzed with JSCS or not.
-- `lint.eslint`: If your code should be analyzed with ESLint or not.
+- `lint.jscs`: If your code should be analyzed with [JSCS](http://jscs.info) or not.
+- `lint.eslint`: If your code should be analyzed with [ESLint](http://eslint.org) or not.
 - `lint.target`: A glob or an array of globs that will be analyzed. Glob refers to [node-glob syntax](https://github.com/isaacs/node-glob) or it can be a direct file path.
+
+Check the **Extras** section for more information about [JSCS](http://jscs.info) and [ESLint](http://eslint.org).
 
 ### Docs
 
@@ -196,6 +198,8 @@ new Bundlerify(gulp, {
 - `esdocOptions.source`: The directory where the documented files are.
 - `esdocOptions.destination`: The directory where the docs will be generated.
 - `esdocOptions.plugins`: A list of plugins for the ESDoc generator. In this case, it just uses the one for the ES6 syntax.
+
+Check the **Extras** section for more information about [ESDoc](https://esdoc.org).
 
 [ESDoc docs](https://esdoc.org/api.html) (:P)
 
@@ -297,17 +301,9 @@ new Bundlerify(gulp, {
 
 ### Dependencies
 
-Bundlerify uses **fourteen** module dependencies and each and eavery one of them can be overwritten with a simple getter method (*):
+Bundlerify uses **thirteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
 
-#### 1 - [object-assign-deep](https://www.npmjs.com/package/object-assign-deep)
-The reason I'm using this package it's because `Object.assign()` doesn't do a deep merge, which I needed for the settings.
-The difference between this dependencies and the other thirteen it's that because this is needed to merge the settings, it needs to be present in the constructor, so I added it as the third optional argument of the class constructor.
-
-```javascript
-new Bundlerify(gulp, {}, _.extend);
-```
-
-#### 2 - [Watchify](https://www.npmjs.com/package/watchify)
+#### 1 - [Watchify](https://www.npmjs.com/package/watchify)
 
 This is used to update your Browserify build any time you make a change. This plays along with BrowserSync perfectly :). You can inject your own version by doing this:
 
@@ -316,7 +312,7 @@ const b = new Bundlerify(gulp);
 b.watchify = myCustomWatchify;
 ```
 
-#### 3 - [Browserify](https://www.npmjs.com/package/browserify)
+#### 2 - [Browserify](https://www.npmjs.com/package/browserify)
 
 This generates one single build package with all the required modules of your project. You can inject your own version by doing this:
 
@@ -325,7 +321,7 @@ const b = new Bundlerify(gulp);
 b.browserify = myCustomBrowserify;
 ```
 
-#### 4 - [Babelify](https://www.npmjs.com/package/babelify)
+#### 3 - [Babelify](https://www.npmjs.com/package/babelify)
 
 It transforms your ES6 code with [Babel](https://babeljs.io) so Browserify can create a build. You can inject your own version by doing this:
 
@@ -334,7 +330,7 @@ const b = new Bundlerify(gulp);
 b.babelify = myCustomBabelify;
 ```
 
-#### 5 - [vinyl-source-stream](https://www.npmjs.com/package/vinyl-source-stream)
+#### 4 - [vinyl-source-stream](https://www.npmjs.com/package/vinyl-source-stream)
 
 Creates a text stream of the Browserify build so it can be modified on the Gulp pipe. You can inject your own version by doing this:
 
@@ -343,7 +339,7 @@ const b = new Bundlerify(gulp);
 b.vinylSourceStream = myCustomVinylSourceStream;
 ```
 
-#### 6 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
+#### 5 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
 
 Creates a test server for your project and refreshes the page every time your build it's updated (which is updated thanks to Watchify). You can inject your own version by doing this:
 
@@ -352,7 +348,7 @@ const b = new Bundlerify(gulp);
 b.browserSync = myCustomBrowserSync;
 ```
 
-#### 7 - [rimraf](https://www.npmjs.com/package/rimraf)
+#### 6 - [rimraf](https://www.npmjs.com/package/rimraf)
 
 It's the node version of `rm -rf ...` and it's used to clean the distribution directory before doing a new build. You can inject your own version by doing this:
 
@@ -361,7 +357,7 @@ const b = new Bundlerify(gulp);
 b.rimraf = myCustomRimRaf;
 ```
 
-#### 8 - [gulp-util](https://www.npmjs.com/package/gulp-util)
+#### 7 - [gulp-util](https://www.npmjs.com/package/gulp-util)
 
 A set of utility function for Gulp. Bundlerify uses it to log Gulp-like errors on the console. You can inject your own version by doing this:
 
@@ -370,7 +366,7 @@ const b = new Bundlerify(gulp);
 b.gulpUtil = myCustomGulpUtil;
 ```
 
-#### 9 - [gulp-if](https://www.npmjs.com/package/gulp-if)
+#### 8 - [gulp-if](https://www.npmjs.com/package/gulp-if)
 
 A utility module that runs in the pipe and execute some actions depending on a boolean balue... an `if` for `.pipe`. You can inject your own version by doing this:
 
@@ -379,7 +375,7 @@ const b = new Bundlerify(gulp);
 b.gulpIf = myCustomGulpIf;
 ```
 
-#### 10 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
+#### 9 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
 
 Force some plugins to work with Gulp streams. Bundlerify uses it for `gulp-uglify`. You can inject your own version by doing this:
 
@@ -388,7 +384,7 @@ const b = new Bundlerify(gulp);
 b.gulpStreamify = myCustomGulpStreamify;
 ```
 
-#### 11 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
+#### 10 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
 
 Minifies and uglifies the build file. You can inject your own version by doing this:
 
@@ -397,7 +393,7 @@ const b = new Bundlerify(gulp);
 b.gulpUglify = myCustomGulpUglify;
 ```
 
-#### 12 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
+#### 11 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
 
 Lint your project with JSCS. You can inject your own version by doing this:
 
@@ -406,7 +402,7 @@ const b = new Bundlerify(gulp);
 b.gulpJSCS = myCustomGulpJSCS;
 ```
 
-#### 13 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
+#### 12 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
 
 Lint your project with ESLint. You can inject your own version by doing this:
 
@@ -415,7 +411,7 @@ const b = new Bundlerify(gulp);
 b.gulpESLint = myCustomGulpESLint;
 ```
 
-#### 14 - [ESDoc](https://www.npmjs.com/package/esdoc)
+#### 13 - [ESDoc](https://www.npmjs.com/package/esdoc)
 
 Generates your project documentation. You can inject your own version by doing this:
 
@@ -430,6 +426,36 @@ ESdoc it's special because it also uses a publisher module, and by default, Bund
 const b = new Bundlerify(gulp);
 esdocPublisher = myCustomESDocPublisher;
 ```
+#### *: Note
+
+There are three other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
+
+- [esdoc-es7-plugin](https://www.npmjs.com/package/esdoc-es7-plugin): The ESDoc plugin for ES6/7 syntax. You can change it on the settings: `esdocOptions.plugins`. Check the **Docs** part under **Usage**.
+- [whatwg-fetch](https://www.npmjs.com/package/whatwg-fetch): The `Fetch` polyfill for old browsers. You can edit the `polyfills` setting to remove it from the list.
+- [core-js](https://www.npmjs.com/package/core-js): More Polyfills, Bundlerify uses two from by this package: `Symbol` and `Promise`, and like with `Fetch`, you can edit the `polyfills` setting to remove them.
+
+## Extras
+
+### JSCS
+
+> JSCS is a code style linter for programmatically enforcing your style guide. You can configure JSCS for your project in detail using over 150 validation rules, including presets from popular style guides like jQuery, Airbnb, Google, and more.
+
+If you want a quick start, you can copy the [.jscscr](./.jscsrc) file from this repository and put it on the root of your project, then just run the `lint` task.
+Feel free to modify your `.jscsrc` with your own rules and presets.
+
+[JSCS Overview](http://jscs.info/overview).
+
+#### ESLint
+
+> The pluggable linting utility for JavaScript and JSX.
+
+The short version, it's like JSHint, but it supports plugins :). Like with JSCS, you can copy the [.eslintrc](./.eslintrc) file from this repository and run the `lint` task.
+
+#### ESDoc
+
+> ESDoc is a documentation generator for JavaScript(ES6).
+
+that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but Bundlerify doesn't need because you can send the ESDoc configuration on the `esdocOptions` setting option.
 
 ## Development
 
@@ -444,6 +470,18 @@ esdocPublisher = myCustomESDocPublisher;
 - `npm run coverage`: Run the unit tests and open the coverage report on the browser.
 - `npm run lint`: Lint the plugin's code with JSCS and ESLint.
 - `npm run docs`: Generate the project documentation.
+
+## Version History
+
+#### 1.0.2
+
+- Added compatibility with node `v0.12.6`.
+- Better organization of the dependencies and development dependencies on the `package.json`.
+- Updated the `README` with more information about dependencies, ESLint, JSCS and ESDoc.
+- Included a version history on the `README`.
+
+#### 1.0.0 and 1.0.1
+Initial version. The reason I made an empty release was because I published it to early in [npmjs](http://npmjs.com) and I needed to refresh it.
 
 ## License
 

@@ -58,15 +58,14 @@ describe('gulp-bundlerify', () => {
         expect(config.watchifyOptions.fullPaths).toEqual(dummyConfig.watchifyOptions.fullPaths);
         expect(config.browserSyncOptions.enabled).toBeFalsy();
         expect(config.browserSyncOptions.server.directory).toBeFalsy();
-        expect(config.browserSyncOptions.server.routes).toEqual(Object.assign(
+        expect(config.browserSyncOptions.server.routes).toEqual(instance._mergeObjects(
             dummyConfig.browserSyncOptions.server.routes,
             {
                 '/src/': './src/',
                 '/dist/': './dist/',
             }
         ));
-        const presetsValue = ['es2015'].concat(dummyConfig.babelifyOptions.presets);
-        expect(config.babelifyOptions.presets).toEqual(presetsValue);
+        expect(config.babelifyOptions.presets).toEqual(dummyConfig.babelifyOptions.presets);
     });
     /**
      * @test {Bundlerify#_expandShorthandSettings}
@@ -168,7 +167,7 @@ describe('gulp-bundlerify', () => {
             },
         };
 
-        const instance = new Bundlerify(gulp, require('object-assign-deep'));
+        const instance = new Bundlerify(gulp);
 
         instance.watchify = dummyValues.watchify.name;
         expect(instance.watchify).toEqual(dummyValues.watchify.name);
@@ -376,7 +375,12 @@ describe('gulp-bundlerify', () => {
 
         const instance = new Bundlerify(mockGulp, {
             polyfillsEnabled: true,
-            polyfills: [mockPolyfill],
+            polyfills: [
+                mockPolyfill,
+                'whatwg-fetch/fetch',
+                'core-js/fn/symbol',
+                'core-js/fn/promise',
+            ],
         });
 
         instance.browserify = mockBrowserify.browserify.bind(mockBrowserify);
