@@ -26,7 +26,7 @@ Well, the solution:
 |--------------|------------------------------------------------------------------|
 | Package      | gulp-bundlerify                                                  |
 | Description  | Something between a generator and a boilerplate for ES6 projects |
-| Node Version | >= v4.0.0                                                        |
+| Node Version | >= v0.12.6 (You need >= v4.0.0 for the tests)                    |
 
 
 ## Installation
@@ -297,17 +297,9 @@ new Bundlerify(gulp, {
 
 ### Dependencies
 
-Bundlerify uses **fourteen** module dependencies and each and eavery one of them can be overwritten with a simple getter method (*):
+Bundlerify uses **thirteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
 
-#### 1 - [object-assign-deep](https://www.npmjs.com/package/object-assign-deep)
-The reason I'm using this package it's because `Object.assign()` doesn't do a deep merge, which I needed for the settings.
-The difference between this dependencies and the other thirteen it's that because this is needed to merge the settings, it needs to be present in the constructor, so I added it as the third optional argument of the class constructor.
-
-```javascript
-new Bundlerify(gulp, {}, _.extend);
-```
-
-#### 2 - [Watchify](https://www.npmjs.com/package/watchify)
+#### 1 - [Watchify](https://www.npmjs.com/package/watchify)
 
 This is used to update your Browserify build any time you make a change. This plays along with BrowserSync perfectly :). You can inject your own version by doing this:
 
@@ -316,7 +308,7 @@ const b = new Bundlerify(gulp);
 b.watchify = myCustomWatchify;
 ```
 
-#### 3 - [Browserify](https://www.npmjs.com/package/browserify)
+#### 2 - [Browserify](https://www.npmjs.com/package/browserify)
 
 This generates one single build package with all the required modules of your project. You can inject your own version by doing this:
 
@@ -325,7 +317,7 @@ const b = new Bundlerify(gulp);
 b.browserify = myCustomBrowserify;
 ```
 
-#### 4 - [Babelify](https://www.npmjs.com/package/babelify)
+#### 3 - [Babelify](https://www.npmjs.com/package/babelify)
 
 It transforms your ES6 code with [Babel](https://babeljs.io) so Browserify can create a build. You can inject your own version by doing this:
 
@@ -334,7 +326,7 @@ const b = new Bundlerify(gulp);
 b.babelify = myCustomBabelify;
 ```
 
-#### 5 - [vinyl-source-stream](https://www.npmjs.com/package/vinyl-source-stream)
+#### 4 - [vinyl-source-stream](https://www.npmjs.com/package/vinyl-source-stream)
 
 Creates a text stream of the Browserify build so it can be modified on the Gulp pipe. You can inject your own version by doing this:
 
@@ -343,7 +335,7 @@ const b = new Bundlerify(gulp);
 b.vinylSourceStream = myCustomVinylSourceStream;
 ```
 
-#### 6 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
+#### 5 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
 
 Creates a test server for your project and refreshes the page every time your build it's updated (which is updated thanks to Watchify). You can inject your own version by doing this:
 
@@ -352,7 +344,7 @@ const b = new Bundlerify(gulp);
 b.browserSync = myCustomBrowserSync;
 ```
 
-#### 7 - [rimraf](https://www.npmjs.com/package/rimraf)
+#### 6 - [rimraf](https://www.npmjs.com/package/rimraf)
 
 It's the node version of `rm -rf ...` and it's used to clean the distribution directory before doing a new build. You can inject your own version by doing this:
 
@@ -361,7 +353,7 @@ const b = new Bundlerify(gulp);
 b.rimraf = myCustomRimRaf;
 ```
 
-#### 8 - [gulp-util](https://www.npmjs.com/package/gulp-util)
+#### 7 - [gulp-util](https://www.npmjs.com/package/gulp-util)
 
 A set of utility function for Gulp. Bundlerify uses it to log Gulp-like errors on the console. You can inject your own version by doing this:
 
@@ -370,7 +362,7 @@ const b = new Bundlerify(gulp);
 b.gulpUtil = myCustomGulpUtil;
 ```
 
-#### 9 - [gulp-if](https://www.npmjs.com/package/gulp-if)
+#### 8 - [gulp-if](https://www.npmjs.com/package/gulp-if)
 
 A utility module that runs in the pipe and execute some actions depending on a boolean balue... an `if` for `.pipe`. You can inject your own version by doing this:
 
@@ -379,7 +371,7 @@ const b = new Bundlerify(gulp);
 b.gulpIf = myCustomGulpIf;
 ```
 
-#### 10 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
+#### 9 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
 
 Force some plugins to work with Gulp streams. Bundlerify uses it for `gulp-uglify`. You can inject your own version by doing this:
 
@@ -388,7 +380,7 @@ const b = new Bundlerify(gulp);
 b.gulpStreamify = myCustomGulpStreamify;
 ```
 
-#### 11 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
+#### 10 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
 
 Minifies and uglifies the build file. You can inject your own version by doing this:
 
@@ -397,7 +389,7 @@ const b = new Bundlerify(gulp);
 b.gulpUglify = myCustomGulpUglify;
 ```
 
-#### 12 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
+#### 11 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
 
 Lint your project with JSCS. You can inject your own version by doing this:
 
@@ -406,7 +398,7 @@ const b = new Bundlerify(gulp);
 b.gulpJSCS = myCustomGulpJSCS;
 ```
 
-#### 13 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
+#### 12 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
 
 Lint your project with ESLint. You can inject your own version by doing this:
 
@@ -415,7 +407,7 @@ const b = new Bundlerify(gulp);
 b.gulpESLint = myCustomGulpESLint;
 ```
 
-#### 14 - [ESDoc](https://www.npmjs.com/package/esdoc)
+#### 13 - [ESDoc](https://www.npmjs.com/package/esdoc)
 
 Generates your project documentation. You can inject your own version by doing this:
 
@@ -430,6 +422,13 @@ ESdoc it's special because it also uses a publisher module, and by default, Bund
 const b = new Bundlerify(gulp);
 esdocPublisher = myCustomESDocPublisher;
 ```
+#### *: Note
+
+There are three other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
+
+- [esdoc-es7-plugin](https://www.npmjs.com/package/esdoc-es7-plugin): The ESDoc plugin for ES6/7 syntax. You can change it on the settings: `esdocOptions.plugins`. Check the **Docs** part under **Usage**.
+- [whatwg-fetch](https://www.npmjs.com/package/whatwg-fetch): The `Fetch` polyfill for old browsers. You can edit the `polyfills` setting to remove it from the list.
+- [core-js](https://www.npmjs.com/package/core-js): More Polyfills, Bundlerify uses two from by this package: `Symbol` and `Promise`, and like with `Fetch`, you can edit the `polyfills` setting to remove them.
 
 ## Development
 
