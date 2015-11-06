@@ -48,12 +48,27 @@ export default class Bundlerify {
          * @type {Function}
          */
         this.gulp = gulp;
+        /**
+         * Detect the alternative method of initializing the plugin using just the
+         * mainFile setting.
+         */
         if (typeof config === 'string') {
             config = {
                 mainFile: config,
             };
         } else {
             config = this._expandShorthandSettings(this._mergeObjects({}, config));
+        }
+        /**
+         * Checks if the ESDoc options should be read from a file.
+         */
+        if (typeof config.esdocOptions === 'string') {
+            const esdocOptionsFile = require('fs').readFileSync(config.esdocOptions);
+            if (esdocOptionsFile) {
+                config.esdocOptions = JSON.parse(esdocOptionsFile);
+            } else {
+                delete config.esdocOptions;
+            }
         }
         /**
          * The Bundlerify main settings.
