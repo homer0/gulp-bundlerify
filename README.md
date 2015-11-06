@@ -428,9 +428,10 @@ esdocPublisher = myCustomESDocPublisher;
 ```
 #### *: Note
 
-There are three other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
+There are four other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
 
 - [esdoc-es7-plugin](https://www.npmjs.com/package/esdoc-es7-plugin): The ESDoc plugin for ES6/7 syntax. You can change it on the settings: `esdocOptions.plugins`. Check the **Docs** part under **Usage**.
+- [babel-eslint](https://github.com/babel/babel-eslint): The ESLint plugin for Babel. You can change it on your `.eslintrc` configuration file.
 - [whatwg-fetch](https://www.npmjs.com/package/whatwg-fetch): The `Fetch` polyfill for old browsers. You can edit the `polyfills` setting to remove it from the list.
 - [core-js](https://www.npmjs.com/package/core-js): More Polyfills, Bundlerify uses two from by this package: `Symbol` and `Promise`, and like with `Fetch`, you can edit the `polyfills` setting to remove them.
 
