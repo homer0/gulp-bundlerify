@@ -2,8 +2,9 @@
 jest.autoMockOff();
 
 const Bundlerify = require('../src/index');
-const BrowserifyMock = require(BrowserifyMockPath);
+const BrowserifyMock = require('./utils/browserify.js');
 const gulp = require('gulp');
+const originalFs = require('fs');
 /**
  * @test {Bundlerify}
  */
@@ -103,6 +104,50 @@ describe('gulp-bundlerify', () => {
             },
         });
         expect(instance.config.browserSyncOptions.server.routes[dummyPath]).toEqual(dummyPath);
+    });
+    /**
+     * @test {Bundlerify#_getDependency}
+     */
+    it('should read the ESDoc options from a file', () => {
+        jest.mock('fs');
+
+        // Try a valid file
+
+        const dummyOptions = {
+            name: 'docs',
+            type: 'file',
+        };
+
+        require('fs').__setMockFiles({
+            docFile: JSON.stringify(dummyOptions),
+        });
+
+        let instance = new Bundlerify(gulp, {
+            esdocOptions: 'docFile',
+        });
+
+        Object.keys(dummyOptions).forEach((optionName) => {
+            expect(instance.config.esdocOptions[optionName]).toEqual(dummyOptions[optionName]);
+        });
+
+        // Try an invalid file
+
+        const originalOptions = {
+            enabled: true,
+            source: './src',
+            destination: './docs',
+            plugins: [
+                {name: 'esdoc-es7-plugin'},
+            ],
+        };
+
+        instance = new Bundlerify(gulp, {
+            esdocOptions: 'invalidFile',
+        });
+
+        expect(instance.config.esdocOptions).toEqual(originalOptions);
+
+        jest.setMock('fs', originalFs);
     });
     /**
      * @test {Bundlerify#_getDependency}

@@ -66,12 +66,25 @@ var Bundlerify = (function () {
          * @type {Function}
          */
         this.gulp = gulp;
+        /**
+         * Detect the alternative method of initializing the plugin using just the
+         * mainFIle setting.
+         */
         if (typeof config === 'string') {
             config = {
                 mainFile: config
             };
         } else {
             config = this._expandShorthandSettings(this._mergeObjects({}, config));
+        }
+        /**
+         * Checks if the ESDoc options should be read from a file.
+         */
+        if (typeof config.esdocOptions === 'string') {
+            var esdocOptionsFile = require('fs').readFileSync(config.esdocOptions);
+            if (esdocOptionsFile) {
+                config.esdocOptions = JSON.parse(esdocOptionsFile);
+            }
         }
         /**
          * The Bundlerify main settings.
