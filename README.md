@@ -299,6 +299,18 @@ new Bundlerify(gulp, {
 }).tasks();
 ```
 
+### Running a callback before every task
+
+```javascript
+new Bundlerify(gulp, {
+    beforeTask: (task, instance) => {
+        // ... do something
+    }
+}).tasks();
+```
+
+This is a utility callback that runs before executing every task. It can be used to change the instance settings depending on the task that it's about to run.
+
 ### Dependencies
 
 Bundlerify uses **thirteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
