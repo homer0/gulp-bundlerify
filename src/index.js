@@ -49,6 +49,22 @@ export default class Bundlerify {
          */
         this.gulp = gulp;
         /**
+         * We'll need path to resolve useful paths inside the plugin, like the absolute path to
+         * `babel-jest`, or the list of files for the coverage report.
+         */
+        const path = require('path');
+        /**
+         * A few ID constants to be used inside the plugin.
+         * @type {Object}
+         * @private
+         * @ignore
+         */
+        this._consts = {
+            packageName: 'gulp-bundlerify',
+            path: path.resolve('node_modules/gulp-bundlerify'),
+            modules: path.resolve('node_modules'),
+        };
+        /**
          * Detect the alternative method of initializing the plugin using just the
          * mainFile setting.
          */
@@ -68,6 +84,21 @@ export default class Bundlerify {
                 config.esdocOptions = JSON.parse(esdocOptionsFile);
             } else {
                 delete config.esdocOptions;
+            }
+        }
+        /**
+         * Checks if the Jest options should be read from a file.
+         */
+        if (typeof config.jestOptions === 'string') {
+            const jestOptionsFilename = config.jestOptions;
+            const jestOptionsFile = require('fs').readFileSync(jestOptionsFilename);
+            if (jestOptionsFile) {
+                config.jestOptions = JSON.parse(jestOptionsFile);
+                if (jestOptionsFilename === 'package.json') {
+                    config.jestOptions = config.jestOptions.jest;
+                }
+            } else {
+                delete config.jestOptions;
             }
         }
         /**
@@ -92,7 +123,7 @@ export default class Bundlerify {
                 enabled: true,
                 server: {
                     baseDir: './',
-                    directory: true,
+                    directory: false,
                     index: 'index.html',
                     routes: {
                         '/src/': './src/',
@@ -124,6 +155,14 @@ export default class Bundlerify {
                     {name: 'esdoc-es7-plugin'},
                 ],
             },
+            jestOptions: {
+                target: '.',
+                collectCoverage: true,
+                scriptPreprocessor: this._consts.path + '/node_modules/babel-jest',
+                preprocessorIgnorePatterns: ['/node_modules/', '/dist/', '/es5/'],
+                testFileExtensions: ['es6', 'js', 'jsx'],
+                moduleFileExtensions: ['js', 'json', 'jsx', 'es6'],
+            },
             tasks: {
                 build: 'build',
                 serve: 'serve',
@@ -131,11 +170,28 @@ export default class Bundlerify {
                 clean: 'clean',
                 cleanEs5: 'cleanEs5',
                 lint: 'lint',
+                test: 'test',
                 docs: 'docs',
             },
             beforeTask: () => {},
         }, config);
 
+        /**
+         * If the Jest option `collectCoverageOnlyFrom` was used, this code will resolve the
+         * absolute paths for those files.
+         */
+        if (this.config.jestOptions.collectCoverageOnlyFrom) {
+            const newCoveragePaths = {};
+            Object.keys(this.config.jestOptions.collectCoverageOnlyFrom).forEach((file) => {
+                newCoveragePaths[path.resolve(file)] = true;
+            });
+
+            this.config.jestOptions.collectCoverageOnlyFrom = newCoveragePaths;
+        }
+
+        /**
+         * Create a route for the distribution directory on the BrowserSync test server.
+         */
         let distRoutePath = this.config.dist.dir;
         if (distRoutePath.substr(0, 1) === '.') {
             distRoutePath = distRoutePath.substr(1);
@@ -259,6 +315,20 @@ export default class Bundlerify {
          */
         this._esdocPublisher = null;
         /**
+         * A custom version of Jest-cli that may be injected using the `jest` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._jest = null;
+        /**
+         * A custom version of through2 that may be injected using the `through` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._through = null;
+        /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
          * @type {Boolean}
@@ -346,6 +416,30 @@ export default class Bundlerify {
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint()))
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format()))
         .pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
+    }
+    /**
+     * Run the Jest tests from your project. This method it's called by the `test` task.
+     * @return {Function} It returns the stream used to run Jest.
+     */
+    test() {
+        this._beforeTask('test');
+        const target = this.config.jestOptions.target;
+        delete this.config.jestOptions.target;
+        return this.gulp.src(target)
+        .pipe(((() => {
+            return this.through.obj(((file, enc, callback) => {
+                this.config.jestOptions.rootDir = this.config.jestOptions.rootDir || file.path;
+                this.jest.runCLI({
+                    config: this.config.jestOptions,
+                }, this.config.jestOptions.rootDir, ((success) => {
+                    if (!success) {
+                        this._logError(new Error('Tests failed'));
+                    }
+
+                    callback();
+                }).bind(this));
+            }).bind(this));
+        }).bind(this))());
     }
     /**
      * Generate the project documentation using ESDoc. This method it's called by the `docs` task.
@@ -629,7 +723,7 @@ export default class Bundlerify {
      * @ignore
      */
     _logError(error) {
-        const gErr = new this.gulpUtil.PluginError('gulp-bundlerify', error.message);
+        const gErr = new this.gulpUtil.PluginError(this._consts.packageName, error.message);
         console.log(gErr.toString());
     }
     /**
@@ -879,5 +973,37 @@ export default class Bundlerify {
      */
     get esdocPublisher() {
         return this._esdocPublisher || this._getDependency('esdoc/out/src/Publisher/publish');
+    }
+    /**
+     * Set a custom version of Jest-cli.
+     * @type {Function}
+     */
+    set jest(value) {
+        this._jest = value;
+    }
+    /**
+     * Get the Jest-cli instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get jest() {
+        return this._jest || this._getDependency('jest-cli');
+    }
+    /**
+     * Set a custom version of through.
+     * @type {Function}
+     */
+    set through(value) {
+        this._through = value;
+    }
+    /**
+     * Get the through instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get through() {
+        return this._through || this._getDependency('through2');
     }
 }

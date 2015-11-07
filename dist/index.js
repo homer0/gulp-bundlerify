@@ -57,6 +57,8 @@ var Bundlerify = (function () {
      */
 
     function Bundlerify(gulp) {
+        var _this = this;
+
         _classCallCheck(this, Bundlerify);
 
         var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
@@ -66,6 +68,22 @@ var Bundlerify = (function () {
          * @type {Function}
          */
         this.gulp = gulp;
+        /**
+         * We'll need path to resolve useful paths inside the plugin, like the absolute path to
+         * `babel-jest`, or the list of files for the coverage report.
+         */
+        var path = require('path');
+        /**
+         * A few ID constants to be used inside the plugin.
+         * @type {Object}
+         * @private
+         * @ignore
+         */
+        this._consts = {
+            packageName: 'gulp-bundlerify',
+            path: path.resolve('node_modules/gulp-bundlerify'),
+            modules: path.resolve('node_modules')
+        };
         /**
          * Detect the alternative method of initializing the plugin using just the
          * mainFile setting.
@@ -89,6 +107,21 @@ var Bundlerify = (function () {
             }
         }
         /**
+         * Checks if the Jest options should be read from a file.
+         */
+        if (typeof config.jestOptions === 'string') {
+            var jestOptionsFilename = config.jestOptions;
+            var jestOptionsFile = require('fs').readFileSync(jestOptionsFilename);
+            if (jestOptionsFile) {
+                config.jestOptions = JSON.parse(jestOptionsFile);
+                if (jestOptionsFilename === 'package.json') {
+                    config.jestOptions = config.jestOptions.jest;
+                }
+            } else {
+                delete config.jestOptions;
+            }
+        }
+        /**
          * The Bundlerify main settings.
          * @type {Object}
          */
@@ -104,13 +137,13 @@ var Bundlerify = (function () {
             },
             watchifyOptions: {
                 debug: true,
-                fullPaths: true
+                fullPaths: false
             },
             browserSyncOptions: {
                 enabled: true,
                 server: {
                     baseDir: './',
-                    directory: true,
+                    directory: false,
                     index: 'index.html',
                     routes: {
                         '/src/': './src/',
@@ -136,6 +169,14 @@ var Bundlerify = (function () {
                 destination: './docs',
                 plugins: [{ name: 'esdoc-es7-plugin' }]
             },
+            jestOptions: {
+                target: '.',
+                collectCoverage: true,
+                scriptPreprocessor: this._consts.path + '/node_modules/babel-jest',
+                preprocessorIgnorePatterns: ['/node_modules/', '/dist/', '/es5/'],
+                testFileExtensions: ['es6', 'js', 'jsx'],
+                moduleFileExtensions: ['js', 'json', 'jsx', 'es6']
+            },
             tasks: {
                 build: 'build',
                 serve: 'serve',
@@ -143,11 +184,30 @@ var Bundlerify = (function () {
                 clean: 'clean',
                 cleanEs5: 'cleanEs5',
                 lint: 'lint',
+                test: 'test',
                 docs: 'docs'
             },
             beforeTask: function beforeTask() {}
         }, config);
 
+        /**
+         * If the Jest option `collectCoverageOnlyFrom` was used, this code will resolve the
+         * absolute paths for those files.
+         */
+        if (this.config.jestOptions.collectCoverageOnlyFrom) {
+            (function () {
+                var newCoveragePaths = {};
+                Object.keys(_this.config.jestOptions.collectCoverageOnlyFrom).forEach(function (file) {
+                    newCoveragePaths[path.resolve(file)] = true;
+                });
+
+                _this.config.jestOptions.collectCoverageOnlyFrom = newCoveragePaths;
+            })();
+        }
+
+        /**
+         * Create a route for the distribution directory on the BrowserSync test server.
+         */
         var distRoutePath = this.config.dist.dir;
         if (distRoutePath.substr(0, 1) === '.') {
             distRoutePath = distRoutePath.substr(1);
@@ -271,6 +331,20 @@ var Bundlerify = (function () {
          */
         this._esdocPublisher = null;
         /**
+         * A custom version of Jest-cli that may be injected using the `jest` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._jest = null;
+        /**
+         * A custom version of through2 that may be injected using the `through` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._through = null;
+        /**
          * A private flag to detect whether the bundler was created for a simple build (wrap with
          * Browserify) or for the watch (using Watchify).
          * @type {Boolean}
@@ -376,6 +450,34 @@ var Bundlerify = (function () {
             return this.gulp.src(this.config.lint.target).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint())).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format())).pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
         }
         /**
+         * Run the Jest tests from your project. This method it's called by the `test` task.
+         * @return {Function} It returns the stream used to run Jest.
+         */
+
+    }, {
+        key: 'test',
+        value: function test() {
+            var _this2 = this;
+
+            this._beforeTask('test');
+            var target = this.config.jestOptions.target;
+            delete this.config.jestOptions.target;
+            return this.gulp.src(target).pipe((function () {
+                return _this2.through.obj((function (file, enc, callback) {
+                    _this2.config.jestOptions.rootDir = _this2.config.jestOptions.rootDir || file.path;
+                    _this2.jest.runCLI({
+                        config: _this2.config.jestOptions
+                    }, _this2.config.jestOptions.rootDir, (function (success) {
+                        if (!success) {
+                            _this2._logError(new Error('Tests failed'));
+                        }
+
+                        callback();
+                    }).bind(_this2));
+                }).bind(_this2));
+            }).bind(this)());
+        }
+        /**
          * Generate the project documentation using ESDoc. This method it's called by the `docs` task.
          * @return {Function} The result of the ESDoc generator.
          */
@@ -399,12 +501,12 @@ var Bundlerify = (function () {
     }, {
         key: 'tasks',
         value: function tasks() {
-            var _this = this;
+            var _this3 = this;
 
             Object.keys(this.config.tasks).forEach(function (name) {
-                var task = _this.config.tasks[name];
+                var task = _this3.config.tasks[name];
                 if (task !== false) {
-                    var defaultTaskDeps = _this._tasksDependencies[name] || [];
+                    var defaultTaskDeps = _this3._tasksDependencies[name] || [];
                     if ((typeof task === 'undefined' ? 'undefined' : _typeof(task)) === 'object') {
                         var taskName = task.name || name;
                         var taskDeps = task.deps || [];
@@ -412,20 +514,20 @@ var Bundlerify = (function () {
                             taskDeps = taskDeps.concat(defaultTaskDeps);
                         }
 
-                        _this.gulp.task(taskName, taskDeps, (function (callback) {
+                        _this3.gulp.task(taskName, taskDeps, (function (callback) {
                             var result = null;
                             if (task.method) {
-                                result = task.method(_this[name].bind(_this), callback);
+                                result = task.method(_this3[name].bind(_this3), callback);
                             } else {
-                                result = _this[name](callback);
+                                result = _this3[name](callback);
                             }
 
                             return result;
-                        }).bind(_this));
+                        }).bind(_this3));
                     } else {
-                        _this.gulp.task(name, defaultTaskDeps, (function (callback) {
-                            return _this[name](callback);
-                        }).bind(_this));
+                        _this3.gulp.task(name, defaultTaskDeps, (function (callback) {
+                            return _this3[name](callback);
+                        }).bind(_this3));
                     }
                 }
             }, this);
@@ -464,7 +566,7 @@ var Bundlerify = (function () {
     }, {
         key: '_expandShorthandSettings',
         value: function _expandShorthandSettings(config) {
-            var _this2 = this;
+            var _this4 = this;
 
             var shortSettings = {
                 watchifyDebug: 'watchifyOptions/debug',
@@ -476,7 +578,7 @@ var Bundlerify = (function () {
             Object.keys(shortSettings).forEach(function (setting) {
                 var shortValue = config[setting];
                 if (typeof shortValue !== 'undefined') {
-                    _this2._setValueAtObjectPath(config, shortSettings[setting], shortValue);
+                    _this4._setValueAtObjectPath(config, shortSettings[setting], shortValue);
                     delete config[setting];
                 }
             }, this);
@@ -530,7 +632,7 @@ var Bundlerify = (function () {
     }, {
         key: '_mergeObjects',
         value: function _mergeObjects() {
-            var _this3 = this;
+            var _this5 = this;
 
             var result = {};
 
@@ -544,11 +646,11 @@ var Bundlerify = (function () {
                         var current = obj[objKey];
                         var target = result[objKey];
                         if (typeof target !== 'undefined' && current.constructor && current.constructor === Object && target.constructor && target.constructor === Object) {
-                            result[objKey] = _this3._mergeObjects(target, current);
+                            result[objKey] = _this5._mergeObjects(target, current);
                         } else {
                             result[objKey] = current;
                         }
-                    }, _this3);
+                    }, _this5);
                 }
             }, this);
 
@@ -688,7 +790,7 @@ var Bundlerify = (function () {
     }, {
         key: '_logError',
         value: function _logError(error) {
-            var gErr = new this.gulpUtil.PluginError('gulp-bundlerify', error.message);
+            var gErr = new this.gulpUtil.PluginError(this._consts.packageName, error.message);
             console.log(gErr.toString());
         }
         /**
@@ -1001,6 +1103,46 @@ var Bundlerify = (function () {
         ,
         get: function get() {
             return this._esdocPublisher || this._getDependency('esdoc/out/src/Publisher/publish');
+        }
+        /**
+         * Set a custom version of Jest-cli.
+         * @type {Function}
+         */
+
+    }, {
+        key: 'jest',
+        set: function set(value) {
+            this._jest = value;
+        }
+        /**
+         * Get the Jest-cli instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
+        get: function get() {
+            return this._jest || this._getDependency('jest-cli');
+        }
+        /**
+         * Set a custom version of through.
+         * @type {Function}
+         */
+
+    }, {
+        key: 'through',
+        set: function set(value) {
+            this._through = value;
+        }
+        /**
+         * Get the through instance the plugin it's using. If a custom version was injected
+         * using the setter, it will return that, otherwise, it will require the one on the plugin
+         * `package.json`.
+         * @type {Function}
+         */
+        ,
+        get: function get() {
+            return this._through || this._getDependency('through2');
         }
     }]);
 

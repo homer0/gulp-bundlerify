@@ -17,7 +17,7 @@ I now it's nothing new or special, but every time I started a new project I had 
 Well, the solution:
 
 - Bundlerify it's a plugin, you import it, set the settings you want and done.
-- Most of the default settings align with what most tutorials and examples use.
+- Almost all of the default settings align with what most tutorials and examples use.
 - You can inject your own dependencies.
 
 ## Information
@@ -61,6 +61,7 @@ Just with that you have all the tasks Bundlerify adds and the basic settings to 
 - `clean`: Deletes the distribution directory.
 - `es5`: Instead of making a build with Browserify, compile all the files to ES5.
 - `cleanEs5`: Deletes the ES5 directory.
+- `test`: Run unit tests with Jest.
 
 Ok, that's just the basic usage, now lets review all the possible settings...
 
@@ -215,9 +216,72 @@ new Bundlerify(gulp, {
 - `esdocOptions.destination`: The directory where the docs will be generated.
 - `esdocOptions.plugins`: A list of plugins for the ESDoc generator. In this case, it just uses the one for the ES6 syntax.
 
+If you have your ESDoc configuration on a `esdoc.json`, you can tell Bundlerify to get your settings from there by giving the name of your file to the `esdocOptions` key:
+
+```javascript
+new Bundlerify(gulp, {
+    esdocOptions: 'esdoc.json'
+}).tasks();
+```
+
 Check the **Extras** section for more information about [ESDoc](https://esdoc.org).
 
 [ESDoc docs](https://esdoc.org/api.html) (:P)
+
+### Unit testing
+
+```javascript
+new Bundlerify(gulp, {
+    jestOptions: {
+        target: '.',
+        collectCoverage: true,
+        preprocessorIgnorePatterns: ['/node_modules/', '/dist/', '/es5/']
+    }
+}).tasks();
+```
+
+- `jestOptions`: This entire object will be set as the Jest configuration.
+- `jestOptions.target`: **This is the most important property**, because it's not a default from the Jest configuration but a it's the path this plugin uses to get the files that are going to be sent to Jest.
+- `jestOptions.collectCoverage`: A flag to know if code coverage should be generated from your tests.
+- `jestOptions.preprocessorIgnorePatterns`: A list of directories and/or files that should be ignored by the preprocessor.
+
+Two things to have in mind while using this:
+
+- Bundlerify uses the [babel-jest](https://github.com/babel/babel-jest) preprocessor by default, and it's located inside the plugin. If you want to change it, you can use the `scriptPreprocessor` setting and set the path to your preprocessor.
+- Instead of using an object for the `jestOptions`, you can tell Bundlerify to get your settings from a file by just using it's name as value:
+
+```javascript
+new Bundlerify(gulp, {
+    jestOptions: 'jest.json'
+}).tasks();
+```
+
+And if you are migrating and you already have your Jest settings in your `package.json`, no problem! Bundlerify will automatically detect it and extract your settings from the `jest` property:
+
+```javascript
+{
+    "name": "gulp-bundlerify",
+    "repository": "homer0/gulp-bundlerify",
+    "license": "MIT",
+    "jest": {
+        "collectCoverage": true,
+        "collectCoverageOnlyFrom": {
+            "src/index.js" : true
+        },
+    },
+    "main": "dist/index.js"
+}
+```
+
+and...
+
+```javascript
+new Bundlerify(gulp, {
+    jestOptions: 'package.json'
+}).tasks();
+```
+
+[Jest docs](https://facebook.github.io/jest/docs/api.html)
 
 ### Tasks
 
@@ -329,7 +393,7 @@ This is a utility callback that runs before executing every task. It can be used
 
 ### Dependencies
 
-Bundlerify uses **fourteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
+Bundlerify uses **sixteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
 
 #### 1 - [Watchify](https://www.npmjs.com/package/watchify)
 
@@ -463,14 +527,35 @@ ESdoc it's special because it also uses a publisher module, and by default, Bund
 const b = new Bundlerify(gulp);
 esdocPublisher = myCustomESDocPublisher;
 ```
+
+### 15 - [jest-cli](https://www.npmjs.com/package/jest-cli)
+
+Runs your unit tests suite. You can inject your own version by doing this:
+
+```javascript
+const b = new Bundlerify(gulp);
+b.jest = myCustomJest;
+```
+
+### 16 - [through2](https://www.npmjs.com/package/through2)
+
+A wrapper for streams that allows the plugin to run `jest-cli` with a stream rather than running the `cli` command. You can inject your own version by doing this:
+
+```javascript
+const b = new Bundlerify(gulp);
+b.through = myCustomThrough;
+```
+
+
 #### *: Note
 
-There are four other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
+There are five other dependencies that can't be "injected", but that's because the Bundlerify doesn't use them directly:
 
 - [esdoc-es7-plugin](https://www.npmjs.com/package/esdoc-es7-plugin): The ESDoc plugin for ES6/7 syntax. You can change it on the settings: `esdocOptions.plugins`. Check the **Docs** part under **Usage**.
 - [babel-eslint](https://github.com/babel/babel-eslint): The ESLint plugin for Babel. You can change it on your `.eslintrc` configuration file.
 - [whatwg-fetch](https://www.npmjs.com/package/whatwg-fetch): The `Fetch` polyfill for old browsers. You can edit the `polyfills` setting to remove it from the list.
 - [core-js](https://www.npmjs.com/package/core-js): More Polyfills, Bundlerify uses two from by this package: `Symbol` and `Promise`, and like with `Fetch`, you can edit the `polyfills` setting to remove them.
+- [babel-jest](https://www.npmjs.com/package/babel-jest): The preprocessor the plugin uses to compile your code and tests when running the `test` task. You can specify your own preprocessor with the `jestOption. scriptPreprocessor` setting. Check the **Unit testing** part under **Usage**.
 
 ## Extras
 
@@ -481,7 +566,7 @@ There are four other dependencies that can't be "injected", but that's because t
 If you want a quick start, you can copy the [.jscscr](./.jscsrc) file from this repository and put it on the root of your project, then just run the `lint` task.
 Feel free to modify your `.jscsrc` with your own rules and presets.
 
-[JSCS Overview](http://jscs.info/overview).
+[JSCS overview](http://jscs.info/overview).
 
 #### ESLint
 
@@ -493,7 +578,13 @@ The short version, it's like JSHint, but it supports plugins :). Like with JSCS,
 
 > ESDoc is a documentation generator for JavaScript(ES6).
 
-that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but Bundlerify doesn't need because you can send the ESDoc configuration on the `esdocOptions` setting option.
+that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but you can set the configuration using the Bundlerify `esdocOptions` setting option. As mentioned on the **Docs** section of this file, if you need/use an external file for the configuration, you give Bundlerify the name of your file as value for `esdocOptions` and it will automatically retrieve those values.
+
+#### Jest
+
+> Painless JavaScript Unit Testing
+
+Jest is a unit tests suite Facebook built on top of [Jasmine](jasmine.github.io) and that it's intended to test ES6 and React applications. It's really easy to configure and as you may noticed, Bundlerify not only provides support for your project Jest tests, but it also uses itself for its own unit tests.
 
 ## Development
 

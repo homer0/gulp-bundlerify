@@ -5,10 +5,22 @@ const Bundlerify = require('../src/index');
 const BrowserifyMock = require('./utils/browserify.js');
 const gulp = require('gulp');
 const originalFs = require('fs');
+const originalPath = require('path');
+
+jest.mock('fs');
+const mockFs = require('fs');
+jest.mock('path');
+const mockPath = require('path');
+
 /**
  * @test {Bundlerify}
  */
 describe('gulp-bundlerify', () => {
+
+    beforeEach(() => {
+        jest.setMock('fs', originalFs);
+        jest.setMock('path', originalPath);
+    });
 
     afterEach(() => {
         const instance = null;
@@ -107,10 +119,10 @@ describe('gulp-bundlerify', () => {
         expect(instance.config.browserSyncOptions.server.routes[dummyPath]).toEqual(dummyPath);
     });
     /**
-     * @test {Bundlerify#_getDependency}
+     * @test {Bundlerify#constructor}
      */
     it('should read the ESDoc options from a file', () => {
-        jest.mock('fs');
+        jest.setMock('fs', mockFs);
 
         // Try a valid file
 
@@ -119,7 +131,7 @@ describe('gulp-bundlerify', () => {
             type: 'file',
         };
 
-        require('fs').__setMockFiles({
+        mockFs.__setMockFiles({
             docFile: JSON.stringify(dummyOptions),
         });
 
@@ -148,7 +160,56 @@ describe('gulp-bundlerify', () => {
 
         expect(instance.config.esdocOptions).toEqual(originalOptions);
 
-        jest.setMock('fs', originalFs);
+    });
+    /**
+     * @test {Bundlerify#constructor}
+     */
+    it('should read the Jest options from a file', () => {
+        // jest.mock('path');
+        jest.setMock('fs', mockFs);
+        jest.setMock('path', mockPath);
+
+        // Try a valid file
+
+        const dummyPackage = {
+            jest: {
+                collectCoverageOnlyFrom: {
+                    'file.js': true,
+                },
+            },
+        };
+        mockFs.__setMockFiles({
+            'package.json': JSON.stringify(dummyPackage),
+            'jest.json': JSON.stringify(dummyPackage.jest),
+        });
+
+        let instance = new Bundlerify(gulp, {
+            jestOptions: 'package.json',
+        });
+
+        expect(instance.config.jestOptions.collectCoverageOnlyFrom['ABSOLUTE/PATH/file.js'])
+        .toBeTruthy();
+
+        // Use a file that is not package.json
+
+        instance = new Bundlerify(gulp, {
+            jestOptions: 'jest.json',
+        });
+
+        expect(instance.config.jestOptions.collectCoverageOnlyFrom['ABSOLUTE/PATH/file.js'])
+        .toBeTruthy();
+
+        // Try an invalid file
+
+        instance = new Bundlerify(gulp, {
+            jestOptions: 'invalidFile',
+        });
+
+        expect(instance.config.jestOptions.collectCoverageOnlyFrom).toBeUndefined();
+
+        // expect(instance.config.esdocOptions).toEqual(originalOptions);
+
+        // jest.setMock('path', originalPath);
     });
     /**
      * @test {Bundlerify#_getDependency}
@@ -214,6 +275,14 @@ describe('gulp-bundlerify', () => {
             esdocPublisher: {
                 name: 'My Custom Publisher',
                 module: 'esdoc/out/src/Publisher/publish',
+            },
+            jest: {
+                name: 'My Custom Jest',
+                module: 'jest-cli',
+            },
+            through: {
+                name: 'My Custom Through',
+                module: 'through2',
             },
         };
 
@@ -297,6 +366,16 @@ describe('gulp-bundlerify', () => {
         expect(instance.esdocPublisher).toEqual(dummyValues.esdocPublisher.name);
         instance.esdocPublisher = null;
         expect(instance.esdocPublisher).toEqual(require(dummyValues.esdocPublisher.module));
+
+        instance.jest = dummyValues.jest.name;
+        expect(instance.jest).toEqual(dummyValues.jest.name);
+        instance.jest = null;
+        expect(instance.jest).toEqual(require(dummyValues.jest.module));
+
+        instance.through = dummyValues.through.name;
+        expect(instance.through).toEqual(dummyValues.through.name);
+        instance.through = null;
+        expect(instance.through).toEqual(require(dummyValues.through.module));
     });
     /**
      * @test {Bundlerify#tasks}
@@ -436,6 +515,37 @@ describe('gulp-bundlerify', () => {
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
         expect(mockBeforeTask.mock.calls[0][0]).toEqual('linter');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
+    });
+    /**
+     * @test {Bundlerify#test}
+     */
+    it('should run the test task', () => {
+        const mockGulp = new BrowserifyMock();
+        const mockThrough = jest.genMockFromModule('through2');
+        const mockJest = jest.genMockFromModule('jest-cli');
+        const mockGulpUtil = jest.genMockFromModule('gulp-util');
+        const mockSuccess = jest.genMockFunction();
+
+        const instance = new Bundlerify(mockGulp);
+        instance.through = mockThrough;
+        instance.jest = mockJest;
+        instance.gulpUtil = mockGulpUtil;
+
+        console.log = jasmine.createSpy('log');
+
+        instance.test();
+
+        expect(mockGulp.srcMock.mock.calls.length).toEqual(1);
+        expect(mockGulp.pipeMock.mock.calls.length).toEqual(1);
+
+        mockThrough.obj.mock.calls[0][0]({
+            path: 'abc',
+        }, true, mockSuccess);
+
+        mockJest.runCLI.mock.calls[0][2](false);
+        expect(console.log).toHaveBeenCalled();
+        mockJest.runCLI.mock.calls[0][2](true);
+
     });
     /**
      * @test {Bundlerify#docs}
