@@ -80,9 +80,13 @@ export default class Bundlerify {
                 file: 'build.js',
                 dir: './dist/',
             },
+            es5: {
+                origin: './src/**/*',
+                dir: './es5/',
+            },
             watchifyOptions: {
                 debug: true,
-                fullPaths: true,
+                fullPaths: false,
             },
             browserSyncOptions: {
                 enabled: true,
@@ -93,6 +97,7 @@ export default class Bundlerify {
                     routes: {
                         '/src/': './src/',
                         '/dist/': './dist/',
+                        '/es5/': './es5/',
                     },
                 },
             },
@@ -122,7 +127,9 @@ export default class Bundlerify {
             tasks: {
                 build: 'build',
                 serve: 'serve',
+                es5: 'es5',
                 clean: 'clean',
+                cleanEs5: 'cleanEs5',
                 lint: 'lint',
                 docs: 'docs',
             },
@@ -171,6 +178,14 @@ export default class Bundlerify {
          * @ignore
          */
         this._vinylSourceStream = null;
+        /**
+         * A custom version of vinyl-transform that may be injected using the `vinylTransform`
+         * setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._vinylTransform = null;
         /**
          * A custom version of BrowserSync that may be injected using the `browserSync` setter.
          * @type {Function}
@@ -268,6 +283,7 @@ export default class Bundlerify {
         this._tasksDependencies = {
             serve: ['build'],
             build: ['clean'],
+            es5: ['cleanEs5'],
         };
     }
     /**
@@ -277,7 +293,16 @@ export default class Bundlerify {
      */
     clean(callback = null) {
         this._beforeTask('clean');
-        this.rimraf(this.config.dist.dir, callback);
+        this._cleanDirectory(this.config.dist.dir, callback);
+    }
+    /**
+     * Clean the ES5 output directory. This method it's called by the `cleanEs5` task, which is a
+     * dependency of the `es5` task.
+     * @param  {Function} [callback=null] - An optional callback sent by the Gulp task.
+     */
+    cleanEs5(callback = null) {
+        this._beforeTask('cleanEs5');
+        this._cleanDirectory(this.config.es5.dir, callback);
     }
     /**
      * Make a new build. This method it's called by the `build` task.
@@ -299,6 +324,17 @@ export default class Bundlerify {
         this._bundler = null;
         this.browserSync(this.config.browserSyncOptions);
         return this._bundle();
+    }
+    /**
+     * Compile your project to ES5 using. This method it's called by the `es5` task.
+     * @return {Function} It returns the stream used to compile the files.
+     */
+    es5() {
+        this._beforeTask('es5');
+        return this.gulp.src(this.config.es5.origin)
+        .pipe(this.vinylTransform(this.babelify.configure(this.config.babelifyOptions)))
+        .pipe(this.gulpIf(this.config.uglify, this.gulpStreamify(this.gulpUglify())))
+        .pipe(this.gulp.dest(this.config.es5.dir));
     }
     /**
      * Lint the project code. This method it's called by the `serve` task.
@@ -559,6 +595,17 @@ export default class Bundlerify {
         return this._bundler;
     }
     /**
+     * Runs `rm -rf` on a given directory. This is a resource method for the `clean` and `cleanEs5`
+     * tasks and that's why it receives a callback argument.
+     * @param  {String}   path     - The path to the directory to delete.
+     * @param  {Function} callback - An optional callback sent by the Gulp task.
+     * @private
+     * @ignore
+     */
+    _cleanDirectory(path, callback = null) {
+        this.rimraf(path, callback);
+    }
+    /**
      * Internally used to require dependency modules. The dynamic getters for the modules will
      * check first if there's a custom version, if there isn't, the getter will call this method
      * and then the module will be required. This way it avoids required all the modules at once
@@ -656,6 +703,22 @@ export default class Bundlerify {
      */
     get vinylSourceStream() {
         return this._vinylSourceStream || this._getDependency('vinyl-source-stream');
+    }
+    /**
+     * Set a custom version of vinyl-transform
+     * @type {Function}
+     */
+    set vinylTransform(value) {
+        this._vinylTransform = value;
+    }
+    /**
+     * Get the vinyl-transform instance the plugin it's using. If a custom version was
+     * injected using the setter, it will return that, otherwise, it will require the one on
+     * the plugin `package.json`.
+     * @type {Function}
+     */
+    get vinylTransform() {
+        return this._vinylTransform || this._getDependency('vinyl-transform');
     }
     /**
      * Set a custom version of BrowserSync.

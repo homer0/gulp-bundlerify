@@ -8,7 +8,7 @@ _(gulp-)_ Bundlerify it's something between a generator and a boilerplate for ES
 
 It uses [Browserify](http://browserify.org/), [Babel](http://babeljs.io), [Watchify](https://github.com/substack/watchify) and [BrowserSync](http://www.browsersync.io) (among others) to build your ES6 project with just a couple of lines, but at the same time, it's also highly customizable: You can inject your own dependencies and tasks very easily.
 
-I now it's nothing new and special, but every time I started a new project I had 3 issues:
+I now it's nothing new or special, but every time I started a new project I had 3 issues:
 
 - I don't like generators that add a LOT of code to your `gulpfile.js`.
 - Most of the time (more now that I try to use ES6 for everything) I need the same tools: [Babel](http://babeljs.io), [ESLint](http://eslint.org), [ESDoc](http://esdoc.org), [Browserify](http://browserify.org/), etc.). And I think the only thing it changes between project it's the project file, so it's always the same settings and tasks.
@@ -59,6 +59,8 @@ Just with that you have all the tasks Bundlerify adds and the basic settings to 
 - `lint`: Run JSCS and ESLint for your project.
 - `docs`: It will generate your project documentation using ESDoc.
 - `clean`: Deletes the distribution directory.
+- `es5`: Instead of making a build with Browserify, compile all the files to ES5.
+- `cleanEs5`: Deletes the ES5 directory.
 
 Ok, that's just the basic usage, now lets review all the possible settings...
 
@@ -77,6 +79,20 @@ new Bundlerify(gulp, {
 - `mainFile`: The file from which the build will be generated.
 - `dist.file`: The distribution file that Browserify will generate.
 - `dist.dir`: The directory where the distribution file will be saved.
+
+### Compile to ES5
+
+```javascript
+new Bundlerify(gulp, {
+    es5: {
+        origin: './src/**/*',
+        dir: './es5/',
+    },
+}).tasks();
+```
+
+- `es5.origin`: A glob or an array of globs for files that will be compiled. Glob refers to [node-glob syntax](https://github.com/isaacs/node-glob) or it can be a direct file path.
+- `es5.dir`: The directory where the ES5 files will be saved.
 
 ### Watchify options
 
@@ -229,7 +245,7 @@ new Bundlerify(gulp, {
 
 The tasks setting is, maybe, the "most" complex of the settings, but allows you to customize **everything** related to the tasks Bundlerify creates.
 
-This setting is an object with six keys, one per each task Bundlerify creates: `build`, `serve`, `clean`, `lint` and `docs` (you can see a brief description of each one at the beginning of this section); and you can do four things with the tasks:
+This setting is an object with six keys, one per each task Bundlerify creates: `build`, `serve`, `clean`, `lint`, `es5`, `cleanEs5` and `docs` (you can see a brief description of each one at the beginning of this section); and you can do four things with the tasks:
 
 #### - Disable
 
@@ -313,7 +329,7 @@ This is a utility callback that runs before executing every task. It can be used
 
 ### Dependencies
 
-Bundlerify uses **thirteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
+Bundlerify uses **fourteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
 
 #### 1 - [Watchify](https://www.npmjs.com/package/watchify)
 
@@ -335,7 +351,7 @@ b.browserify = myCustomBrowserify;
 
 #### 3 - [Babelify](https://www.npmjs.com/package/babelify)
 
-It transforms your ES6 code with [Babel](https://babeljs.io) so Browserify can create a build. You can inject your own version by doing this:
+It transforms your ES6 code with [Babel](https://babeljs.io) so Browserify can create a build. Babelify it's also used with [vinyl-transform](https://www.npmjs.com/package/vinyl-transform) by the `es5` task to compile the separated files. You can inject your own version by doing this:
 
 ```javascript
 const b = new Bundlerify(gulp);
@@ -351,7 +367,16 @@ const b = new Bundlerify(gulp);
 b.vinylSourceStream = myCustomVinylSourceStream;
 ```
 
-#### 5 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
+#### 5 - [vinyl-transform](https://www.npmjs.com/package/vinyl-transform)
+
+Allows the use of a Browserify transform plugins on a regular Gulp stream, and thanks to that, Bundlerify can _re use_ Babelify to compile each individual file with the `es5` task. You can inject your own version by doing this:
+
+```javascript
+const b = new Bundlerify(gulp);
+b.vinylTransform = myCustomVinylTransform;
+```
+
+#### 6 - [BrowserSync](https://www.npmjs.com/package/browser-sync)
 
 Creates a test server for your project and refreshes the page every time your build it's updated (which is updated thanks to Watchify). You can inject your own version by doing this:
 
@@ -360,7 +385,7 @@ const b = new Bundlerify(gulp);
 b.browserSync = myCustomBrowserSync;
 ```
 
-#### 6 - [rimraf](https://www.npmjs.com/package/rimraf)
+#### 7 - [rimraf](https://www.npmjs.com/package/rimraf)
 
 It's the node version of `rm -rf ...` and it's used to clean the distribution directory before doing a new build. You can inject your own version by doing this:
 
@@ -369,7 +394,7 @@ const b = new Bundlerify(gulp);
 b.rimraf = myCustomRimRaf;
 ```
 
-#### 7 - [gulp-util](https://www.npmjs.com/package/gulp-util)
+#### 8 - [gulp-util](https://www.npmjs.com/package/gulp-util)
 
 A set of utility function for Gulp. Bundlerify uses it to log Gulp-like errors on the console. You can inject your own version by doing this:
 
@@ -378,7 +403,7 @@ const b = new Bundlerify(gulp);
 b.gulpUtil = myCustomGulpUtil;
 ```
 
-#### 8 - [gulp-if](https://www.npmjs.com/package/gulp-if)
+#### 9 - [gulp-if](https://www.npmjs.com/package/gulp-if)
 
 A utility module that runs in the pipe and execute some actions depending on a boolean balue... an `if` for `.pipe`. You can inject your own version by doing this:
 
@@ -387,7 +412,7 @@ const b = new Bundlerify(gulp);
 b.gulpIf = myCustomGulpIf;
 ```
 
-#### 9 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
+#### 10 - [gulp-streamify](https://www.npmjs.com/package/gulp-streamify)
 
 Force some plugins to work with Gulp streams. Bundlerify uses it for `gulp-uglify`. You can inject your own version by doing this:
 
@@ -396,7 +421,7 @@ const b = new Bundlerify(gulp);
 b.gulpStreamify = myCustomGulpStreamify;
 ```
 
-#### 10 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
+#### 11 - [gulp-uglify](https://www.npmjs.com/package/gulp-uglify)
 
 Minifies and uglifies the build file. You can inject your own version by doing this:
 
@@ -405,7 +430,7 @@ const b = new Bundlerify(gulp);
 b.gulpUglify = myCustomGulpUglify;
 ```
 
-#### 11 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
+#### 12 - [gulp-jscs](https://www.npmjs.com/package/gulp-jscs)
 
 Lint your project with JSCS. You can inject your own version by doing this:
 
@@ -414,7 +439,7 @@ const b = new Bundlerify(gulp);
 b.gulpJSCS = myCustomGulpJSCS;
 ```
 
-#### 12 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
+#### 13 - [gulp-eslint](https://www.npmjs.com/package/gulp-eslint)
 
 Lint your project with ESLint. You can inject your own version by doing this:
 
@@ -423,7 +448,7 @@ const b = new Bundlerify(gulp);
 b.gulpESLint = myCustomGulpESLint;
 ```
 
-#### 13 - [ESDoc](https://www.npmjs.com/package/esdoc)
+#### 14 - [ESDoc](https://www.npmjs.com/package/esdoc)
 
 Generates your project documentation. You can inject your own version by doing this:
 

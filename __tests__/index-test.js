@@ -64,6 +64,7 @@ describe('gulp-bundlerify', () => {
             {
                 '/src/': './src/',
                 '/dist/': './dist/',
+                '/es5/': './es5/',
             }
         ));
         expect(config.babelifyOptions.presets).toEqual(dummyConfig.babelifyOptions.presets);
@@ -170,6 +171,10 @@ describe('gulp-bundlerify', () => {
                 name: 'My Custom VinylSourceStream',
                 module: 'vinyl-source-stream',
             },
+            vinylTransform: {
+                name: 'My Custom VinylTransform',
+                module: 'vinyl-transform',
+            },
             browserSync: {
                 name: 'My Custom BrowserSync',
                 module: 'browser-sync',
@@ -237,6 +242,11 @@ describe('gulp-bundlerify', () => {
         expect(instance.vinylSourceStream).toEqual(dummyValues.vinylSourceStream.name);
         instance.vinylSourceStream = null;
         expect(instance.vinylSourceStream).toEqual(require(dummyValues.vinylSourceStream.module));
+
+        instance.vinylTransform = dummyValues.vinylTransform.name;
+        expect(instance.vinylTransform).toEqual(dummyValues.vinylTransform.name);
+        instance.vinylTransform = null;
+        expect(instance.vinylTransform).toEqual(require(dummyValues.vinylTransform.module));
 
         instance.browserSync = dummyValues.browserSync.name;
         expect(instance.browserSync).toEqual(dummyValues.browserSync.name);
@@ -309,12 +319,12 @@ describe('gulp-bundlerify', () => {
         expect(instance.tasks()).toEqual(instance);
         const tasksCalls = mockGulp.task.mock.calls;
         const tasksNames = Object.keys(instance.config.tasks);
-        for (let i = 0; i < (tasksNames - 1); i++) {
+        for (let i = 0; i < (tasksNames.length - 1); i++) {
             expect(tasksCalls[i][0]).toEqual(tasksNames[i]);
         }
 
         expect(tasksCalls.length).toEqual(tasksNames.length - 1);
-        const cleanTask = mockGulp.task.mock.calls[2];
+        const cleanTask = mockGulp.task.mock.calls[3];
         cleanTask[2](() => {});
 
         expect(mockRimRaf.mock.calls.length).toEqual(1);
@@ -349,7 +359,7 @@ describe('gulp-bundlerify', () => {
         expect(mockBuildFunc.mock.calls.length).toEqual(1);
         expect(mockBuildFunc.mock.calls[0][0]).toEqual(jasmine.any(Function));
         expect(mockBuildFunc.mock.calls[0][1]).toEqual(jasmine.any(Function));
-        const cleanTask = mockGulp.task.mock.calls[2];
+        const cleanTask = mockGulp.task.mock.calls[3];
         cleanTask[2](() => {});
 
         expect(mockRimRaf.mock.calls.length).toEqual(1);
@@ -372,6 +382,25 @@ describe('gulp-bundlerify', () => {
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
         expect(mockBeforeTask.mock.calls[0][0]).toEqual('clean');
+        expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
+
+    });
+    /**
+     * @test {Bundlerify#cleanEs5}
+     */
+    it('should run the cleanEs5 task', () => {
+        const mockRimRaf = jest.genMockFromModule('rimraf');
+        const mockBeforeTask = jest.genMockFunction();
+        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
+        instance.rimraf = mockRimRaf;
+        instance.cleanEs5(() => {});
+
+        expect(mockRimRaf.mock.calls.length).toEqual(1);
+        expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.es5.dir);
+        expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
+
+        expect(mockBeforeTask.mock.calls.length).toEqual(1);
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('cleanEs5');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
 
     });
@@ -473,7 +502,7 @@ describe('gulp-bundlerify', () => {
         expect(browserifyCall[0][4]).toEqual(instance.config.mainFile);
         expect(browserifyCall[1]).toEqual({
             debug: true,
-            fullPaths: true,
+            fullPaths: false,
             cache: {},
             packageCache: {},
         });
@@ -512,6 +541,42 @@ describe('gulp-bundlerify', () => {
         instance.build();
     });
     /**
+     * @test {Bundlerify#es5}
+     */
+    it('should run the es5 task', () => {
+        const mockGulp = new BrowserifyMock();
+        const mockTransform = jest.genMockFromModule('vinyl-transform');
+        const mockBabelify = jest.genMockFromModule('babelify');
+        const mockSource = jest.genMockFromModule('vinyl-source-stream');
+        const mockGulpIf = jest.genMockFromModule('gulp-if');
+        const mockUglify = jest.genMockFromModule('gulp-uglify');
+        const mockStreamify = jest.genMockFromModule('gulp-streamify');
+
+        const instance = new Bundlerify(mockGulp, {
+            uglify: true,
+        });
+
+        instance.babelify = mockBabelify;
+        instance.vinylTransform = mockTransform;
+        instance.vinylSourceStream = mockSource;
+        instance.gulpIf = mockGulpIf;
+        instance.ugflifier = mockUglify;
+        instance.gulpStreamify = mockStreamify;
+
+        instance.es5();
+
+        expect(mockGulp.srcMock.mock.calls.length).toEqual(1);
+
+        expect(mockGulp.pipeMock.mock.calls.length).toEqual(3);
+
+        expect(mockGulpIf.mock.calls.length).toEqual(1);
+        expect(mockGulpIf.mock.calls[0][0]).toEqual(instance.config.uglify);
+
+        expect(mockStreamify.mock.calls.length).toEqual(1);
+
+        expect(mockGulp.destMock.mock.calls[0][0]).toEqual(instance.config.es5.dir);
+    });
+    /**
      * @test {Bundlerify#serve}
      */
     it('should run the serve task', () => {
@@ -543,7 +608,7 @@ describe('gulp-bundlerify', () => {
         expect(browserifyCall[0]).toEqual([instance.config.mainFile]);
         expect(browserifyCall[1]).toEqual({
             debug: true,
-            fullPaths: true,
+            fullPaths: false,
         });
 
         expect(mockBrowserify.watchifyMock.mock.calls.length).toEqual(1);
