@@ -68,7 +68,7 @@ var Bundlerify = (function () {
         this.gulp = gulp;
         /**
          * Detect the alternative method of initializing the plugin using just the
-         * mainFIle setting.
+         * mainFile setting.
          */
         if (typeof config === 'string') {
             config = {
@@ -84,6 +84,8 @@ var Bundlerify = (function () {
             var esdocOptionsFile = require('fs').readFileSync(config.esdocOptions);
             if (esdocOptionsFile) {
                 config.esdocOptions = JSON.parse(esdocOptionsFile);
+            } else {
+                delete config.esdocOptions;
             }
         }
         /**
@@ -95,6 +97,10 @@ var Bundlerify = (function () {
             dist: {
                 file: 'build.js',
                 dir: './dist/'
+            },
+            es5: {
+                origin: './src/**/*',
+                dir: './es5/'
             },
             watchifyOptions: {
                 debug: true,
@@ -108,7 +114,8 @@ var Bundlerify = (function () {
                     index: 'index.html',
                     routes: {
                         '/src/': './src/',
-                        '/dist/': './dist/'
+                        '/dist/': './dist/',
+                        '/es5/': './es5/'
                     }
                 }
             },
@@ -132,10 +139,13 @@ var Bundlerify = (function () {
             tasks: {
                 build: 'build',
                 serve: 'serve',
+                es5: 'es5',
                 clean: 'clean',
+                cleanEs5: 'cleanEs5',
                 lint: 'lint',
                 docs: 'docs'
-            }
+            },
+            beforeTask: function beforeTask() {}
         }, config);
 
         var distRoutePath = this.config.dist.dir;
@@ -180,6 +190,14 @@ var Bundlerify = (function () {
          * @ignore
          */
         this._vinylSourceStream = null;
+        /**
+         * A custom version of vinyl-transform that may be injected using the `vinylTransform`
+         * setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._vinylTransform = null;
         /**
          * A custom version of BrowserSync that may be injected using the `browserSync` setter.
          * @type {Function}
@@ -276,7 +294,8 @@ var Bundlerify = (function () {
          */
         this._tasksDependencies = {
             serve: ['build'],
-            build: ['clean']
+            build: ['clean'],
+            es5: ['cleanEs5']
         };
     }
     /**
@@ -290,7 +309,22 @@ var Bundlerify = (function () {
         value: function clean() {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
-            this.rimraf(this.config.dist.dir, callback);
+            this._beforeTask('clean');
+            this._cleanDirectory(this.config.dist.dir, callback);
+        }
+        /**
+         * Clean the ES5 output directory. This method it's called by the `cleanEs5` task, which is a
+         * dependency of the `es5` task.
+         * @param  {Function} [callback=null] - An optional callback sent by the Gulp task.
+         */
+
+    }, {
+        key: 'cleanEs5',
+        value: function cleanEs5() {
+            var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+
+            this._beforeTask('cleanEs5');
+            this._cleanDirectory(this.config.es5.dir, callback);
         }
         /**
          * Make a new build. This method it's called by the `build` task.
@@ -300,6 +334,7 @@ var Bundlerify = (function () {
     }, {
         key: 'build',
         value: function build() {
+            this._beforeTask('build');
             this._watch = false;
             return this._bundle();
         }
@@ -312,10 +347,22 @@ var Bundlerify = (function () {
     }, {
         key: 'serve',
         value: function serve() {
+            this._beforeTask('serve');
             this._watch = true;
             this._bundler = null;
             this.browserSync(this.config.browserSyncOptions);
             return this._bundle();
+        }
+        /**
+         * Compile your project to ES5 using. This method it's called by the `es5` task.
+         * @return {Function} It returns the stream used to compile the files.
+         */
+
+    }, {
+        key: 'es5',
+        value: function es5() {
+            this._beforeTask('es5');
+            return this.gulp.src(this.config.es5.origin).pipe(this.vinylTransform(this.babelify.configure(this.config.babelifyOptions))).pipe(this.gulpIf(this.config.uglify, this.gulpStreamify(this.gulpUglify()))).pipe(this.gulp.dest(this.config.es5.dir));
         }
         /**
          * Lint the project code. This method it's called by the `serve` task.
@@ -325,6 +372,7 @@ var Bundlerify = (function () {
     }, {
         key: 'lint',
         value: function lint() {
+            this._beforeTask('lint');
             return this.gulp.src(this.config.lint.target).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint())).pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format())).pipe(this.gulpIf(this.config.lint.jscs, this.gulpJSCS()));
         }
         /**
@@ -335,6 +383,7 @@ var Bundlerify = (function () {
     }, {
         key: 'docs',
         value: function docs() {
+            this._beforeTask('docs');
             return this.esdoc.generate(this.config.esdocOptions, this.esdocPublisher);
         }
         /**
@@ -382,6 +431,27 @@ var Bundlerify = (function () {
             }, this);
 
             return this;
+        }
+        /**
+         * Call the `beforeTask` config callback with the name/alias of a selected task.
+         * @param  {String} taskName - The internal name of the task. It will automatically detect if
+         *                             the name was changed from the config.
+         * @private
+         * @ignore
+         */
+
+    }, {
+        key: '_beforeTask',
+        value: function _beforeTask(taskName) {
+            var task = this.config.tasks[taskName];
+            var taskConfigName = '';
+            if ((typeof task === 'undefined' ? 'undefined' : _typeof(task)) === 'object' && task.name) {
+                taskConfigName = task.name;
+            } else {
+                taskConfigName = task;
+            }
+
+            this.config.beforeTask(taskConfigName, this);
         }
         /**
          * This method is called by the constructor and it's used to expand the shorthand settings.
@@ -573,6 +643,22 @@ var Bundlerify = (function () {
             return this._bundler;
         }
         /**
+         * Runs `rm -rf` on a given directory. This is a resource method for the `clean` and `cleanEs5`
+         * tasks and that's why it receives a callback argument.
+         * @param  {String}   path     - The path to the directory to delete.
+         * @param  {Function} callback - An optional callback sent by the Gulp task.
+         * @private
+         * @ignore
+         */
+
+    }, {
+        key: '_cleanDirectory',
+        value: function _cleanDirectory(path) {
+            var callback = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
+
+            this.rimraf(path, callback);
+        }
+        /**
          * Internally used to require dependency modules. The dynamic getters for the modules will
          * check first if there's a custom version, if there isn't, the getter will call this method
          * and then the module will be required. This way it avoids required all the modules at once
@@ -695,6 +781,26 @@ var Bundlerify = (function () {
         ,
         get: function get() {
             return this._vinylSourceStream || this._getDependency('vinyl-source-stream');
+        }
+        /**
+         * Set a custom version of vinyl-transform
+         * @type {Function}
+         */
+
+    }, {
+        key: 'vinylTransform',
+        set: function set(value) {
+            this._vinylTransform = value;
+        }
+        /**
+         * Get the vinyl-transform instance the plugin it's using. If a custom version was
+         * injected using the setter, it will return that, otherwise, it will require the one on
+         * the plugin `package.json`.
+         * @type {Function}
+         */
+        ,
+        get: function get() {
+            return this._vinylTransform || this._getDependency('vinyl-transform');
         }
         /**
          * Set a custom version of BrowserSync.

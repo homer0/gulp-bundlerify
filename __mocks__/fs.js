@@ -1,3 +1,5 @@
+'use strict';
+
 // __mocks__/fs.js
 
 // Get the real (not mocked) version of the 'path' module

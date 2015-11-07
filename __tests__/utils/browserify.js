@@ -17,6 +17,7 @@ class BrowserifyMock {
         this.pipeMock = jest.genMockFunction();
         this.watchifyMock = jest.genMockFunction();
         this.srcMock = jest.genMockFunction();
+        this.destMock = jest.genMockFunction();
     }
     /**
      * The mock method Browserify itself.
@@ -72,6 +73,15 @@ class BrowserifyMock {
      */
     src(target) {
         this.srcMock(target);
+        return this;
+    }
+    /**
+     * It mocks the Gulp `dest` method.
+     * @param  {Function} action - The function to be executed on the pipe step.
+     * @return {BrowserifyMock} It returns the current instance, so it can be chained.
+     */
+    dest(dir) {
+        this.destMock(dir);
         return this;
     }
     /**
