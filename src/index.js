@@ -126,6 +126,7 @@ export default class Bundlerify {
                 lint: 'lint',
                 docs: 'docs',
             },
+            beforeTask: () => {},
         }, config);
 
         let distRoutePath = this.config.dist.dir;
@@ -275,6 +276,7 @@ export default class Bundlerify {
      * @param  {Function} [callback=null] - An optional callback sent by the Gulp task.
      */
     clean(callback = null) {
+        this._beforeTask('clean');
         this.rimraf(this.config.dist.dir, callback);
     }
     /**
@@ -282,6 +284,7 @@ export default class Bundlerify {
      * @return {Function} It returns the stream used to create and write the build.
      */
     build() {
+        this._beforeTask('build');
         this._watch = false;
         return this._bundle();
     }
@@ -291,6 +294,7 @@ export default class Bundlerify {
      * @return {Function} It returns the stream used to create and write the build.
      */
     serve() {
+        this._beforeTask('serve');
         this._watch = true;
         this._bundler = null;
         this.browserSync(this.config.browserSyncOptions);
@@ -301,6 +305,7 @@ export default class Bundlerify {
      * @return {Function} It returns the stream used to create and write the build.
      */
     lint() {
+        this._beforeTask('lint');
         return this.gulp.src(this.config.lint.target)
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint()))
         .pipe(this.gulpIf(this.config.lint.eslint, this.gulpESLint.format()))
@@ -311,6 +316,7 @@ export default class Bundlerify {
      * @return {Function} The result of the ESDoc generator.
      */
     docs() {
+        this._beforeTask('docs');
         return this.esdoc.generate(this.config.esdocOptions, this.esdocPublisher);
     }
     /**
@@ -354,6 +360,24 @@ export default class Bundlerify {
         }, this);
 
         return this;
+    }
+    /**
+     * Call the `beforeTask` config callback with the name/alias of a selected task.
+     * @param  {String} taskName - The internal name of the task. It will automatically detect if
+     *                             the name was changed from the config.
+     * @private
+     * @ignore
+     */
+    _beforeTask(taskName) {
+        const task = this.config.tasks[taskName];
+        let taskConfigName = '';
+        if (typeof task === 'object' && task.name) {
+            taskConfigName = task.name;
+        } else {
+            taskConfigName = task;
+        }
+
+        this.config.beforeTask(taskConfigName, this);
     }
     /**
      * This method is called by the constructor and it's used to expand the shorthand settings.

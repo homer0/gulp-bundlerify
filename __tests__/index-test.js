@@ -361,24 +361,37 @@ describe('gulp-bundlerify', () => {
      */
     it('should run the clean task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
-        const instance = new Bundlerify(gulp);
+        const mockBeforeTask = jest.genMockFunction();
+        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
         instance.rimraf = mockRimRaf;
         instance.clean(() => {});
 
         expect(mockRimRaf.mock.calls.length).toEqual(1);
         expect(mockRimRaf.mock.calls[0][0]).toEqual(instance.config.dist.dir);
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
+
+        expect(mockBeforeTask.mock.calls.length).toEqual(1);
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('clean');
+        expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
+
     });
     /**
      * @test {Bundlerify#lint}
      */
     it('should run the lint task', () => {
         const mockGulp = new BrowserifyMock();
+        const mockBeforeTask = jest.genMockFunction();
         const mockGulpIf = jest.genMockFromModule('gulp-if');
         const mockGulpESLint = jest.genMockFromModule('gulp-eslint');
         const mockGulpJSCS = jest.genMockFromModule('gulp-jscs');
 
-        const instance = new Bundlerify(mockGulp);
+        const instance = new Bundlerify(mockGulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                lint: 'linter',
+            },
+        });
+
         instance.gulpIf = mockGulpIf;
         instance.gulpJSCS = mockGulpJSCS;
         instance.gulpESLint = mockGulpESLint;
@@ -390,18 +403,34 @@ describe('gulp-bundlerify', () => {
         expect(mockGulpESLint.mock.calls.length).toEqual(1);
         expect(mockGulpESLint.format.mock.calls.length).toEqual(1);
         expect(mockGulpJSCS.mock.calls.length).toEqual(1);
+
+        expect(mockBeforeTask.mock.calls.length).toEqual(1);
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('linter');
+        expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
     });
     /**
      * @test {Bundlerify#docs}
      */
     it('should run the docs task', () => {
         const mockESDoc = jest.genMockFromModule('esdoc');
-        const instance = new Bundlerify(gulp);
+        const mockBeforeTask = jest.genMockFunction();
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                docs: {
+                    name: 'documentation',
+                },
+            },
+        });
         instance.esdoc = mockESDoc;
         instance.docs();
         expect(mockESDoc.generate.mock.calls.length).toEqual(1);
         expect(mockESDoc.generate.mock.calls[0][0]).toEqual(instance.config.esdocOptions);
         expect(mockESDoc.generate.mock.calls[0][1]).toEqual(jasmine.any(Function));
+
+        expect(mockBeforeTask.mock.calls.length).toEqual(1);
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('documentation');
+        expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
     });
     /**
      * @test {Bundlerify#build}
