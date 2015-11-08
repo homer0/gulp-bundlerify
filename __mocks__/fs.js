@@ -2,9 +2,6 @@
 
 // __mocks__/fs.js
 
-// Get the real (not mocked) version of the 'path' module
-const path = require.requireActual('path');
-
 // Get the automatic mock for `fs`
 const fsMock = jest.genMockFromModule('fs');
 
