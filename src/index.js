@@ -3,8 +3,9 @@
  * It uses Browserify, Babel, Watchify and BrowserSync, among others, to build your project with
  * just a couple of lines, but at the same time, it's also highly customizable: You can inject
  * your own dependencies and tasks.
- * @version 1.0.0
+ * @version 1.0.2
  */
+
 export default class Bundlerify {
     /**
      * Create a new instance of the plugin.
@@ -79,7 +80,7 @@ export default class Bundlerify {
          * Checks if the ESDoc options should be read from a file.
          */
         if (typeof config.esdocOptions === 'string') {
-            const esdocOptionsFile = require('fs').readFileSync(config.esdocOptions);
+            const esdocOptionsFile = require('fs').readFileSync(config.esdocOptions, 'utf-8');
             if (esdocOptionsFile) {
                 config.esdocOptions = JSON.parse(esdocOptionsFile);
             } else {
@@ -91,7 +92,7 @@ export default class Bundlerify {
          */
         if (typeof config.jestOptions === 'string') {
             const jestOptionsFilename = config.jestOptions;
-            const jestOptionsFile = require('fs').readFileSync(jestOptionsFilename);
+            const jestOptionsFile = require('fs').readFileSync(jestOptionsFilename, 'utf-8');
             if (jestOptionsFile) {
                 config.jestOptions = JSON.parse(jestOptionsFile);
                 if (jestOptionsFilename === 'package.json') {
@@ -171,6 +172,7 @@ export default class Bundlerify {
                 cleanEs5: 'cleanEs5',
                 lint: 'lint',
                 test: 'test',
+                uploadDocs: 'uploadDocs',
                 docs: 'docs',
             },
             beforeTask: () => {},
@@ -307,6 +309,14 @@ export default class Bundlerify {
          */
         this._esdoc = null;
         /**
+         * A custom version of the ESDoc uploader that may be injected using the
+         * `esdocUploader` setter.
+         * @type {Function}
+         * @private
+         * @ignore
+         */
+        this._esdocUploader = null;
+        /**
          * A custom version of the ESDoc Publisher that may be injected using the
          * `esdocPublisher` setter.
          * @type {Function}
@@ -359,7 +369,7 @@ export default class Bundlerify {
     /**
      * Clean the build (dist) directory. This method it's called by the `clean` task, which is a
      * dependency of the `build` task.
-     * @param  {Function} [callback=null] - An optional callback sent by the Gulp task.
+     * @param {Function} [callback=null] - An optional callback sent by the Gulp task.
      */
     clean(callback = null) {
         this._beforeTask('clean');
@@ -368,7 +378,7 @@ export default class Bundlerify {
     /**
      * Clean the ES5 output directory. This method it's called by the `cleanEs5` task, which is a
      * dependency of the `es5` task.
-     * @param  {Function} [callback=null] - An optional callback sent by the Gulp task.
+     * @param {Function} [callback=null] - An optional callback sent by the Gulp task.
      */
     cleanEs5(callback = null) {
         this._beforeTask('cleanEs5');
@@ -448,6 +458,24 @@ export default class Bundlerify {
     docs() {
         this._beforeTask('docs');
         return this.esdoc.generate(this.config.esdocOptions, this.esdocPublisher);
+    }
+    /**
+     * Connects with the [ESDoc hosting service](https://doc.esdoc.org/) API in order to generate
+     * the documentation for your project. This method it's called by the `uploadDocs` task.
+     * @param {Function} [callback=null] - An optional callback sent by the Gulp task.
+     */
+    uploadDocs(callback = null) {
+
+        this._beforeTask('uploadDocs');
+        const uploader = new this.esdocUploader();
+        if (uploader.canUpload()) {
+            uploader.upload(() => {
+                // This callback can't receive the same arguments as the one for `.upload()`.
+                if (callback) {
+                    callback();
+                }
+            });
+        }
     }
     /**
      * Register the plugin tasks on the main project's Gulp. Because it returns the instance
@@ -957,6 +985,22 @@ export default class Bundlerify {
      */
     get esdoc() {
         return this._esdoc || this._getDependency('esdoc');
+    }
+    /**
+     * Set a custom version of the ESDoc Uploader.
+     * @type {Function}
+     */
+    set esdocUploader(value) {
+        this._esdocUploader = value;
+    }
+    /**
+     * Get the ESDoc Uploader instance the plugin it's using. If a custom version was injected
+     * using the setter, it will return that, otherwise, it will require the one on the plugin
+     * `package.json`.
+     * @type {Function}
+     */
+    get esdocUploader() {
+        return this._esdocUploader || this._getDependency('esdoc-uploader').default;
     }
     /**
      * Set a custom version of the ESDoc Publisher.
