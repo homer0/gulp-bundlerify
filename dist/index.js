@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
  * Bundlerify it's something between a generator and a boilerplate for ES6 projects.
@@ -56,12 +56,8 @@ var Bundlerify = (function () {
      * @public
      */
 
-    function Bundlerify(gulp) {
-        var _this = this;
-
+    function Bundlerify(gulp, _x) {
         _classCallCheck(this, Bundlerify);
-
-        var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
         /**
          * A reference to the main project's Gulp.
@@ -389,7 +385,7 @@ var Bundlerify = (function () {
 
     _createClass(Bundlerify, [{
         key: 'clean',
-        value: function clean() {
+        value: function clean(_x2) {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('clean');
@@ -403,7 +399,7 @@ var Bundlerify = (function () {
 
     }, {
         key: 'cleanEs5',
-        value: function cleanEs5() {
+        value: function cleanEs5(_x3) {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('cleanEs5');
@@ -505,7 +501,7 @@ var Bundlerify = (function () {
 
     }, {
         key: 'uploadDocs',
-        value: function uploadDocs() {
+        value: function uploadDocs(_x4) {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('uploadDocs');
@@ -786,7 +782,7 @@ var Bundlerify = (function () {
 
     }, {
         key: '_cleanDirectory',
-        value: function _cleanDirectory(path) {
+        value: function _cleanDirectory(path, _x5) {
             var callback = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
 
             this.rimraf(path, callback);

@@ -34,7 +34,7 @@
     "whatwg-fetch": "0.10.1",
     "core-js": "1.2.6",
     "jest-cli": "0.7.1",
-    "babel-jest": "5.3.0"
+    "babel-jest": "6.0.1"
   },
   "devDependencies": {
     "babel-cli": "6.1.2",
@@ -75,6 +75,9 @@
       "<rootDir>/__tests__/utils",
       "<rootDir>/node_modules/"
     ]
+  },
+  "babel": {
+    "presets": ["es2015"]
   },
   "main": "dist/index.js"
 }

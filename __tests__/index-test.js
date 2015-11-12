@@ -1,13 +1,13 @@
 
 jest.autoMockOff();
 
-const Bundlerify = require('../src/index');
-const BrowserifyMock = require('./utils/browserify.js');
+const Bundlerify = require('../src/index').default;
+const BrowserifyMock = require('./utils/browserify.js').default;
 
 const {
     ESDocUploaderMock,
     ESDocUploaderMockObjs,
-} = require('./utils/esdocUploader.js');
+} = require('./utils/esdocUploader.js').default;
 
 const gulp = require('gulp');
 const originalFs = require('fs');
@@ -42,6 +42,7 @@ describe('gulp-bundlerify', () => {
         expect(instance.build).toEqual(jasmine.any(Function));
         expect(instance.serve).toEqual(jasmine.any(Function));
         expect(instance.tasks).toEqual(jasmine.any(Function));
+        expect(() => Bundlerify(gulp)).toThrow('Cannot call a class as a function');
     });
     /**
      * @test {Bundlerify#config}
@@ -467,7 +468,15 @@ describe('gulp-bundlerify', () => {
     it('should run the clean task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
         const mockBeforeTask = jest.genMockFunction();
-        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                clean: {
+                    deps: ['randomDep'],
+                },
+            },
+        });
+
         instance.rimraf = mockRimRaf;
         instance.clean(() => {});
 
@@ -486,7 +495,14 @@ describe('gulp-bundlerify', () => {
     it('should run the cleanEs5 task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
         const mockBeforeTask = jest.genMockFunction();
-        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                cleanEs5: {
+                    name: 'cleanEs5Directory',
+                },
+            },
+        });
         instance.rimraf = mockRimRaf;
         instance.cleanEs5(() => {});
 
@@ -495,7 +511,7 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
-        expect(mockBeforeTask.mock.calls[0][0]).toEqual('cleanEs5');
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('cleanEs5Directory');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
 
     });
@@ -529,7 +545,7 @@ describe('gulp-bundlerify', () => {
         expect(mockGulpJSCS.mock.calls.length).toEqual(1);
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
-        expect(mockBeforeTask.mock.calls[0][0]).toEqual('linter');
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('lint');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
     });
     /**
@@ -591,7 +607,7 @@ describe('gulp-bundlerify', () => {
     /**
      * @test {Bundlerify#uploadDocs}
      */
-    it('should the uploadDocs task', () => {
+    it('should run the uploadDocs task', () => {
         const mockBeforeTask = jest.genMockFunction();
         const mockCallback = jest.genMockFunction();
         const instance = new Bundlerify(gulp, {

@@ -1,3 +1,4 @@
+
 /**
  * Bundlerify it's something between a generator and a boilerplate for ES6 projects.
  * It uses Browserify, Babel, Watchify and BrowserSync, among others, to build your project with
@@ -5,7 +6,6 @@
  * your own dependencies and tasks.
  * @version 1.0.2
  */
-
 export default class Bundlerify {
     /**
      * Create a new instance of the plugin.
@@ -529,10 +529,14 @@ export default class Bundlerify {
     _beforeTask(taskName) {
         const task = this.config.tasks[taskName];
         let taskConfigName = '';
-        if (typeof task === 'object' && task.name) {
-            taskConfigName = task.name;
+        if (typeof task === 'object') {
+            if (task.name) {
+                taskConfigName = task.name;
+            } else {
+                taskConfigName = taskName;
+            }
         } else {
-            taskConfigName = task;
+            taskConfigName = taskName;
         }
 
         this.config.beforeTask(taskConfigName, this);
