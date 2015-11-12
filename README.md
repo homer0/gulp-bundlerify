@@ -58,6 +58,7 @@ Just with that you have all the tasks Bundlerify adds and the basic settings to 
 - `serve`: Watch your Browserify build and run BrowserSync in your demo folder.
 - `lint`: Run JSCS and ESLint for your project.
 - `docs`: It will generate your project documentation using ESDoc.
+- `uploadDocs`: Connects with the [ESDoc Hosting API](https://doc.esdoc.org) and generates your documentation.
 - `clean`: Deletes the distribution directory.
 - `es5`: Instead of making a build with Browserify, compile all the files to ES5.
 - `cleanEs5`: Deletes the ES5 directory.
@@ -224,6 +225,8 @@ new Bundlerify(gulp, {
 }).tasks();
 ```
 
+**Note:** You'll need to have an `esdoc.json` file if you want to use the `uploadDocs` task.
+
 Check the **Extras** section for more information about [ESDoc](https://esdoc.org).
 
 [ESDoc docs](https://esdoc.org/api.html) (:P)
@@ -347,7 +350,7 @@ new Bundlerify(gulp, {
 }).tasks();
 ```
 
-#### - Adding dependencies
+#### - Adding task dependencies
 
 If you want to add extra dependencies tasks to one of Bundlerify tasks, you can use an object with the `deps` keys:
 
@@ -393,7 +396,7 @@ This is a utility callback that runs before executing every task. It can be used
 
 ### Dependencies
 
-Bundlerify uses **sixteen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
+Bundlerify uses **seventeen**(*) module dependencies and each and every one of them can be overwritten with a simple getter method.
 
 #### 1 - [Watchify](https://www.npmjs.com/package/watchify)
 
@@ -528,7 +531,16 @@ const b = new Bundlerify(gulp);
 esdocPublisher = myCustomESDocPublisher;
 ```
 
-### 15 - [jest-cli](https://www.npmjs.com/package/jest-cli)
+### 15 - [esdoc-uploader](https://www.npmjs.com/package/esdoc-uploader)
+
+This is a plugin I made and that allows Bundlerify to connect with the [ESDoc Hosting API](https://doc.esdoc.org) in order to generate your project documentation. You can inject your own version by doing this:
+
+```javascript
+const b = new Bundlerify(gulp);
+b.esdocUploader = myCustomUploader;
+```
+
+### 16 - [jest-cli](https://www.npmjs.com/package/jest-cli)
 
 Runs your unit tests suite. You can inject your own version by doing this:
 
@@ -537,7 +549,7 @@ const b = new Bundlerify(gulp);
 b.jest = myCustomJest;
 ```
 
-### 16 - [through2](https://www.npmjs.com/package/through2)
+### 17 - [through2](https://www.npmjs.com/package/through2)
 
 A wrapper for streams that allows the plugin to run `jest-cli` with a stream rather than running the `cli` command. You can inject your own version by doing this:
 
@@ -578,7 +590,7 @@ The short version, it's like JSHint, but it supports plugins :). Like with JSCS,
 
 > ESDoc is a documentation generator for JavaScript(ES6).
 
-that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but you can set the configuration using the Bundlerify `esdocOptions` setting option. As mentioned on the **Docs** section of this file, if you need/use an external file for the configuration, you give Bundlerify the name of your file as value for `esdocOptions` and it will automatically retrieve those values.
+that pretty much sums it up, it's a doc generator. Unlike `JSCS` and `ESLint`, you don't _necessarily_ need an `.esdocrc` file, well it uses an `esdoc.json`, but you can set the configuration using the Bundlerify `esdocOptions` setting option. As mentioned on the **Docs** section of this file, if you need/use an external file for the configuration, you can give Bundlerify the name of your file as value for `esdocOptions` and it will automatically retrieve those values.
 
 #### Jest
 

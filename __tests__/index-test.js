@@ -1,16 +1,23 @@
 
 jest.autoMockOff();
 
-const Bundlerify = require('../src/index');
-const BrowserifyMock = require('./utils/browserify.js');
+const Bundlerify = require('../src/index').default;
+const BrowserifyMock = require('./utils/browserify.js').default;
+
+const {
+    ESDocUploaderMock,
+    ESDocUploaderMockObjs,
+} = require('./utils/esdocUploader.js').default;
+
 const gulp = require('gulp');
 const originalFs = require('fs');
 const originalPath = require('path');
+const originalConsoleLog = console.log;
 
 jest.mock('fs');
-const mockFs = require('fs');
+const mockFs = require('../__mocks__/fs');
 jest.mock('path');
-const mockPath = require('path');
+const mockPath = require('../__mocks__/path');
 
 /**
  * @test {Bundlerify}
@@ -35,6 +42,7 @@ describe('gulp-bundlerify', () => {
         expect(instance.build).toEqual(jasmine.any(Function));
         expect(instance.serve).toEqual(jasmine.any(Function));
         expect(instance.tasks).toEqual(jasmine.any(Function));
+        expect(() => Bundlerify(gulp)).toThrow('Cannot call a class as a function');
     });
     /**
      * @test {Bundlerify#config}
@@ -276,6 +284,10 @@ describe('gulp-bundlerify', () => {
                 name: 'My Custom Publisher',
                 module: 'esdoc/out/src/Publisher/publish',
             },
+            esdocUploader: {
+                name: 'My Custom ESDoc Uploader',
+                module: 'esdoc-uploader',
+            },
             jest: {
                 name: 'My Custom Jest',
                 module: 'jest-cli',
@@ -367,6 +379,11 @@ describe('gulp-bundlerify', () => {
         instance.esdocPublisher = null;
         expect(instance.esdocPublisher).toEqual(require(dummyValues.esdocPublisher.module));
 
+        instance.esdocUploader = dummyValues.esdocUploader.name;
+        expect(instance.esdocUploader).toEqual(dummyValues.esdocUploader.name);
+        instance.esdocUploader = null;
+        expect(instance.esdocUploader).toEqual(require(dummyValues.esdocUploader.module).default);
+
         instance.jest = dummyValues.jest.name;
         expect(instance.jest).toEqual(dummyValues.jest.name);
         instance.jest = null;
@@ -451,7 +468,15 @@ describe('gulp-bundlerify', () => {
     it('should run the clean task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
         const mockBeforeTask = jest.genMockFunction();
-        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                clean: {
+                    deps: ['randomDep'],
+                },
+            },
+        });
+
         instance.rimraf = mockRimRaf;
         instance.clean(() => {});
 
@@ -470,7 +495,14 @@ describe('gulp-bundlerify', () => {
     it('should run the cleanEs5 task', () => {
         const mockRimRaf = jest.genMockFromModule('rimraf');
         const mockBeforeTask = jest.genMockFunction();
-        const instance = new Bundlerify(gulp, { beforeTask: mockBeforeTask });
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+            tasks: {
+                cleanEs5: {
+                    name: 'cleanEs5Directory',
+                },
+            },
+        });
         instance.rimraf = mockRimRaf;
         instance.cleanEs5(() => {});
 
@@ -479,7 +511,7 @@ describe('gulp-bundlerify', () => {
         expect(mockRimRaf.mock.calls[0][1]).toEqual(jasmine.any(Function));
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
-        expect(mockBeforeTask.mock.calls[0][0]).toEqual('cleanEs5');
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('cleanEs5Directory');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
 
     });
@@ -513,7 +545,7 @@ describe('gulp-bundlerify', () => {
         expect(mockGulpJSCS.mock.calls.length).toEqual(1);
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
-        expect(mockBeforeTask.mock.calls[0][0]).toEqual('linter');
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('lint');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
     });
     /**
@@ -545,6 +577,7 @@ describe('gulp-bundlerify', () => {
         mockJest.runCLI.mock.calls[0][2](false);
         expect(console.log).toHaveBeenCalled();
         mockJest.runCLI.mock.calls[0][2](true);
+        console.log = originalConsoleLog;
 
     });
     /**
@@ -569,6 +602,41 @@ describe('gulp-bundlerify', () => {
 
         expect(mockBeforeTask.mock.calls.length).toEqual(1);
         expect(mockBeforeTask.mock.calls[0][0]).toEqual('documentation');
+        expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
+    });
+    /**
+     * @test {Bundlerify#uploadDocs}
+     */
+    it('should run the uploadDocs task', () => {
+        const mockBeforeTask = jest.genMockFunction();
+        const mockCallback = jest.genMockFunction();
+        const instance = new Bundlerify(gulp, {
+            beforeTask: mockBeforeTask,
+        });
+
+        instance.esdocUploader = ESDocUploaderMock;
+        const mockUploader =
+        // Successful upload
+        instance.uploadDocs(mockCallback);
+
+        expect(ESDocUploaderMockObjs.uploadMock.mock.calls.length).toEqual(1);
+        ESDocUploaderMockObjs.uploadMock.mock.calls[0][0]();
+        expect(mockCallback.mock.calls.length).toEqual(1);
+
+        // Failed upload
+        ESDocUploaderMockObjs.canUploadReturn = false;
+        instance.uploadDocs(mockCallback);
+        expect(ESDocUploaderMockObjs.uploadMock.mock.calls.length).toEqual(1);
+
+        // Successful upload without a callback
+        ESDocUploaderMockObjs.canUploadReturn = true;
+        instance.uploadDocs();
+        expect(ESDocUploaderMockObjs.uploadMock.mock.calls.length).toEqual(2);
+        expect(ESDocUploaderMockObjs.uploadMock.mock.calls[1][0]).toEqual(jasmine.any(Function));
+        ESDocUploaderMockObjs.uploadMock.mock.calls[1][0]();
+
+        expect(mockBeforeTask.mock.calls.length).toEqual(3);
+        expect(mockBeforeTask.mock.calls[0][0]).toEqual('uploadDocs');
         expect(mockBeforeTask.mock.calls[0][1]).toEqual(instance);
     });
     /**
@@ -632,6 +700,7 @@ describe('gulp-bundlerify', () => {
         expect(mockGulpUtil.PluginError.mock.calls[0][0]).toEqual('gulp-bundlerify');
         expect(mockGulpUtil.PluginError.mock.calls[0][1]).toEqual('Random Error');
         expect(console.log).toHaveBeenCalled();
+        console.log = originalConsoleLog;
 
         expect(mockBrowserify.pipeMock.mock.calls.length).toEqual(4);
 
