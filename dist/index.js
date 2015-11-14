@@ -56,7 +56,11 @@ var Bundlerify = (function () {
      * @public
      */
 
-    function Bundlerify(gulp, _x) {
+    function Bundlerify(gulp) {
+        var _this = this;
+
+        var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
         _classCallCheck(this, Bundlerify);
 
         /**
@@ -385,7 +389,7 @@ var Bundlerify = (function () {
 
     _createClass(Bundlerify, [{
         key: 'clean',
-        value: function clean(_x2) {
+        value: function clean() {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('clean');
@@ -399,7 +403,7 @@ var Bundlerify = (function () {
 
     }, {
         key: 'cleanEs5',
-        value: function cleanEs5(_x3) {
+        value: function cleanEs5() {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('cleanEs5');
@@ -501,7 +505,7 @@ var Bundlerify = (function () {
 
     }, {
         key: 'uploadDocs',
-        value: function uploadDocs(_x4) {
+        value: function uploadDocs() {
             var callback = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
 
             this._beforeTask('uploadDocs');
@@ -574,10 +578,14 @@ var Bundlerify = (function () {
         value: function _beforeTask(taskName) {
             var task = this.config.tasks[taskName];
             var taskConfigName = '';
-            if ((typeof task === 'undefined' ? 'undefined' : _typeof(task)) === 'object' && task.name) {
-                taskConfigName = task.name;
+            if ((typeof task === 'undefined' ? 'undefined' : _typeof(task)) === 'object') {
+                if (task.name) {
+                    taskConfigName = task.name;
+                } else {
+                    taskConfigName = taskName;
+                }
             } else {
-                taskConfigName = task;
+                taskConfigName = taskName;
             }
 
             this.config.beforeTask(taskConfigName, this);
@@ -782,7 +790,7 @@ var Bundlerify = (function () {
 
     }, {
         key: '_cleanDirectory',
-        value: function _cleanDirectory(path, _x5) {
+        value: function _cleanDirectory(path) {
             var callback = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
 
             this.rimraf(path, callback);
@@ -1195,5 +1203,8 @@ var Bundlerify = (function () {
 
     return Bundlerify;
 })();
+/**
+ * @ignore
+ */
 
 exports.default = Bundlerify;
