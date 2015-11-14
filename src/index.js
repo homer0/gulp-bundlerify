@@ -6,7 +6,7 @@
  * your own dependencies and tasks.
  * @version 1.0.2
  */
-export default class Bundlerify {
+class Bundlerify {
     /**
      * Create a new instance of the plugin.
      * @example
@@ -43,7 +43,7 @@ export default class Bundlerify {
      *                                          `mainFile` setting.
      * @public
      */
-    constructor(gulp, config = {}) {
+    constructor(gulp, config={}) {
         /**
          * A reference to the main project's Gulp.
          * @type {Function}
@@ -1055,3 +1055,7 @@ export default class Bundlerify {
         return this._through || this._getDependency('through2');
     }
 }
+/**
+ * @ignore
+ */
+export default Bundlerify;
