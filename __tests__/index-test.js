@@ -215,8 +215,6 @@ describe('gulp-bundlerify', () => {
 
         expect(instance.config.jestOptions.collectCoverageOnlyFrom).toBeUndefined();
 
-        // expect(instance.config.esdocOptions).toEqual(originalOptions);
-
         // jest.setMock('path', originalPath);
     });
     /**

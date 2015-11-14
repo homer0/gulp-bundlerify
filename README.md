@@ -614,6 +614,16 @@ Jest is a unit tests suite Facebook built on top of [Jasmine](jasmine.github.io)
 
 ## Version History
 
+#### 1.0.3
+
+- Fix the _npm anti-pattern_ and publish the ES5 version of the library.
+- Updates all the dependencies and dev dependencies.
+- Added `test` task with Jest.
+- Move `babel-eslint` to production dependencies.
+- Add the option to read the ESDoc options from a file.
+- Add a `beforeTask` callback that runs before any task.
+- Add the `uploadDocs` task to publish in the ESDoc hosting.
+
 #### 1.0.2
 
 - Added compatibility with node `v0.12.6`.

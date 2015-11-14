@@ -1,7 +1,7 @@
 {
   "name": "gulp-bundlerify",
   "description": "Something between a generator and a boilerplate for ES6 projects.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "homer0/gulp-bundlerify",
   "author": "Leonardo Apiwan (@homer0) <me@homer0.com>",
   "license": "MIT",
